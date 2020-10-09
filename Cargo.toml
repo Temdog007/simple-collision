@@ -1,0 +1,22 @@
+[package]
+name = "simple-physics"
+version = "0.1.0"
+authors = ["Temitope Alaga <temdog007@yahoo.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "A simple collision detection library"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.nalgebra]
+version = "0.22.0"
+features = ["serde-serialize"]
+
+[dependencies.serde]
+version = "1.0.116"
+optional = true
+features = ["serde_derive"]
+
+[features]
+default = []
+serde-serialize = ["serde"]
