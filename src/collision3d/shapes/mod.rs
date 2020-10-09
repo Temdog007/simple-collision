@@ -4,6 +4,9 @@ pub use aabb::*;
 pub mod sphere;
 pub use sphere::*;
 
+pub mod plane;
+pub use plane::*;
+
 use nalgebra::*;
 
 use super::*;
