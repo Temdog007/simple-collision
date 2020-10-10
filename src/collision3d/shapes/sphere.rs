@@ -18,6 +18,53 @@ impl Sphere {
             radius,
         }
     }
+    pub fn get_sphere_collision(&self, sphere: &Sphere) -> Option<CollisionResolution> {
+        let n = self.center - sphere.center;
+        let r = (self.radius + sphere.radius).powi(2);
+
+        let len = n.magnitude_squared();
+        if len > r {
+            return None;
+        }
+
+        let d = len.sqrt();
+        let (normal, penetration) = if is_zero(d) {
+            (Vector3::new(1f32, 0f32, 0f32), self.radius)
+        } else {
+            let pen = r.sqrt() - d;
+            (n.normalize(), pen)
+        };
+        Some(CollisionResolution {
+            normal,
+            penetration,
+        })
+    }
+    pub fn get_plane_collision(&self, plane: &Plane) -> Option<CollisionResolution> {
+        let dist = (self.center - plane.random_point()).dot(&plane.normal);
+        if 0f32 < dist && self.radius < dist {
+            Some(CollisionResolution {
+                normal: plane.normal,
+                penetration: self.radius - dist,
+            })
+        } else {
+            None
+        }
+    }
+    pub fn get_triangle_collision(&self, triangle: &Triangle) -> Option<CollisionResolution> {
+        let plane = triangle.to_plane();
+        match self.get_plane_collision(&plane) {
+            a @ Some(_) => {
+                let dist = (self.center - plane.random_point()).dot(&plane.normal);
+                let point = self.center - plane.normal * dist;
+                if triangle.contains(&point) {
+                    a
+                } else {
+                    None
+                }
+            }
+            None => None,
+        }
+    }
 }
 
 impl Shape3D for Sphere {
