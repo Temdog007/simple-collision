@@ -103,10 +103,7 @@ impl Shape3D for Triangle {
         }
     }
     fn bounding_sphere(&self) -> Sphere {
-        Sphere {
-            center: from_f32(0f32),
-            radius: std::f32::MAX,
-        }
+        self.bounding_aabb().bounding_sphere()
     }
     fn center(&self) -> Vector3<f32> {
         (self.point1 + self.point2 + self.point3) / 3f32

@@ -5,6 +5,8 @@ authors = ["<temdog007@yahoo.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 description = "A simple collision detection library"
+keywords = ["collision"]
+repository = "https://github.com/Temdog007/simple-collision"
 
 [dependencies.nalgebra]
 version = "0.22.0"
