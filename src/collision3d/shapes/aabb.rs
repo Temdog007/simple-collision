@@ -18,16 +18,18 @@ impl Add for AABB {
     type Output = AABB;
 
     fn add(self, rhs: AABB) -> Self::Output {
+        let (min_vec1, max_vec1) = self.min_max();
+        let (min_vec2, max_vec2) = rhs.min_max();
         AABB {
             start: Vector3::new(
-                f32_min(get_x(&self.start), get_x(&rhs.start)),
-                f32_min(get_y(&self.start), get_y(&rhs.start)),
-                f32_min(get_z(&self.start), get_z(&rhs.start)),
+                f32_min(get_x(&min_vec1), get_x(&max_vec1)),
+                f32_min(get_y(&min_vec1), get_y(&max_vec1)),
+                f32_min(get_z(&min_vec1), get_z(&max_vec1)),
             ),
             end: Vector3::new(
-                f32_max(get_x(&self.start), get_x(&rhs.start)),
-                f32_max(get_y(&self.start), get_y(&rhs.start)),
-                f32_max(get_z(&self.start), get_z(&rhs.start)),
+                f32_max(get_x(&min_vec2), get_x(&max_vec2)),
+                f32_max(get_y(&min_vec2), get_y(&max_vec2)),
+                f32_max(get_z(&min_vec2), get_z(&max_vec2)),
             ),
         }
     }
@@ -84,11 +86,25 @@ impl AABB {
     pub fn half_depth(&self) -> f32 {
         self.depth() * 0.5f32
     }
+    pub fn min_max(&self) -> (Vector3<f32>, Vector3<f32>) {
+        let min_vec = Vector3::new(
+            f32_min(get_x(&self.start), get_x(&self.end)),
+            f32_min(get_y(&self.start), get_y(&self.end)),
+            f32_min(get_z(&self.start), get_z(&self.end)),
+        );
+        let max_vec = Vector3::new(
+            f32_max(get_x(&self.start), get_x(&self.end)),
+            f32_max(get_y(&self.start), get_y(&self.end)),
+            f32_max(get_z(&self.start), get_z(&self.end)),
+        );
+        (min_vec, max_vec)
+    }
     pub fn closest_point(&self, point: &Vector3<f32>) -> Vector3<f32> {
+        let (min_vec, max_vec) = self.min_max();
         Vector3::new(
-            clamp(get_x(point), get_x(&self.start), get_x(&self.end)),
-            clamp(get_y(point), get_y(&self.start), get_y(&self.end)),
-            clamp(get_z(point), get_z(&self.start), get_z(&self.end)),
+            clamp(get_x(point), get_x(&min_vec), get_x(&max_vec)),
+            clamp(get_y(point), get_y(&min_vec), get_y(&max_vec)),
+            clamp(get_z(point), get_z(&min_vec), get_z(&max_vec)),
         )
     }
     pub fn largest_dim(&self) -> (usize, f32) {
@@ -106,6 +122,94 @@ impl AABB {
             .min_by(|(_, &a), (_, &b)| f32_ordering(a, b))
             .map(|(i, f)| (i, *f))
             .unwrap()
+    }
+    pub fn get_aabb_collision(&self, aabb: &AABB) -> Option<CollisionResolution> {
+        let n = self.center() - aabb.center();
+        let overlap = Vector3::new(
+            self.half_width() + aabb.half_width() - get_x(&n).abs(),
+            self.half_height() + aabb.half_height() - get_y(&n).abs(),
+            self.half_depth() + aabb.half_depth() - get_z(&n).abs(),
+        );
+        if get_x(&overlap) > 0f32 && get_y(&overlap) > 0f32 && get_z(&overlap) > 0f32 {
+            let (index, &penetration) = min_component(&overlap);
+            let normal = match index {
+                0 => Some(Vector3::new(
+                    if get_x(&n) < 0f32 { -1f32 } else { 1f32 },
+                    0f32,
+                    0f32,
+                )),
+                1 => Some(Vector3::new(
+                    0f32,
+                    if get_y(&n) < 0f32 { -1f32 } else { 1f32 },
+                    0f32,
+                )),
+                2 => Some(Vector3::new(
+                    0f32,
+                    0f32,
+                    if get_z(&n) < 0f32 { -1f32 } else { 1f32 },
+                )),
+                _ => None,
+            };
+            if let Some(normal) = normal {
+                return Some(CollisionResolution::new(&normal, penetration));
+            }
+        }
+        None
+    }
+    pub fn get_sphere_collision(&self, sphere: &Sphere) -> Option<CollisionResolution> {
+        let n = self.center() - sphere.center();
+        let extent = Vector3::new(self.half_width(), self.half_height(), self.half_depth());
+        let mut closest = Vector3::new(
+            clamp(get_x(&n), -get_x(&extent), get_x(&extent)),
+            clamp(get_y(&n), -get_y(&extent), get_y(&extent)),
+            clamp(get_z(&n), -get_z(&extent), get_z(&extent)),
+        );
+        let inside = {
+            if n == closest {
+                let (index, _) = min_component(&n.abs());
+                match index {
+                    0 => {
+                        let value = get_x(&closest);
+                        set_x(
+                            &mut closest,
+                            get_x(&extent) * if value > 0f32 { 1f32 } else { -1f32 },
+                        )
+                    }
+                    1 => {
+                        let value = get_y(&closest);
+                        set_y(
+                            &mut closest,
+                            get_y(&extent) * if value > 0f32 { 1f32 } else { -1f32 },
+                        )
+                    }
+                    2 => {
+                        let value = get_z(&closest);
+                        set_z(
+                            &mut closest,
+                            get_z(&extent) * if value > 0f32 { 1f32 } else { -1f32 },
+                        )
+                    }
+                    _ => (),
+                }
+                true
+            } else {
+                false
+            }
+        };
+
+        let normal = n - closest;
+        let d = normal.magnitude_squared();
+        let r = sphere.radius;
+
+        if d > r.powi(2) && !inside {
+            return None;
+        }
+
+        let d = d.sqrt();
+        Some(CollisionResolution {
+            normal: n.normalize(),
+            penetration: r - d,
+        })
     }
 }
 

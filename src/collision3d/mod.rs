@@ -1,6 +1,12 @@
 pub mod shapes;
 pub use shapes::*;
 
+pub mod collision_resolution;
+pub use collision_resolution::*;
+
+pub mod ray;
+pub use ray::*;
+
 use nalgebra::*;
 
 use std::cmp::Ordering;
@@ -23,6 +29,21 @@ pub fn get_y(v: &Vector3<f32>) -> f32 {
 #[inline(always)]
 pub fn get_z(v: &Vector3<f32>) -> f32 {
     unsafe { *v.get_unchecked(2) }
+}
+
+#[inline(always)]
+pub fn set_x(v: &mut Vector3<f32>, value: f32) {
+    unsafe { *v.get_unchecked_mut(0) = value }
+}
+
+#[inline(always)]
+pub fn set_y(v: &mut Vector3<f32>, value: f32) {
+    unsafe { *v.get_unchecked_mut(1) = value }
+}
+
+#[inline(always)]
+pub fn set_z(v: &mut Vector3<f32>, value: f32) {
+    unsafe { *v.get_unchecked_mut(2) = value }
 }
 
 pub fn f32_ordering(a: f32, b: f32) -> Ordering {
@@ -66,4 +87,20 @@ pub fn clamp(value: f32, min: f32, max: f32) -> f32 {
 #[inline(always)]
 pub fn is_zero(a: f32) -> bool {
     a.abs() < std::f32::EPSILON
+}
+
+#[inline(always)]
+pub fn min_component(v: &Vector3<f32>) -> (usize, &f32) {
+    v.iter()
+        .enumerate()
+        .min_by(|(_, &f1), (_, &f2)| f32_ordering(f1, f2))
+        .unwrap()
+}
+
+#[inline(always)]
+pub fn max_component(v: &Vector3<f32>) -> (usize, &f32) {
+    v.iter()
+        .enumerate()
+        .max_by(|(_, &f1), (_, &f2)| f32_ordering(f1, f2))
+        .unwrap()
 }

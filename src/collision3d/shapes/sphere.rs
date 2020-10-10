@@ -11,6 +11,15 @@ pub struct Sphere {
     pub radius: f32,
 }
 
+impl Sphere {
+    pub fn new(center: &Vector3<f32>, radius: f32) -> Sphere {
+        Sphere {
+            center: *center,
+            radius,
+        }
+    }
+}
+
 impl Shape3D for Sphere {
     fn bounding_aabb(&self) -> AABB {
         AABB {
