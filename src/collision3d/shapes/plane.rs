@@ -13,6 +13,12 @@ pub struct Plane {
 }
 
 impl Plane {
+    pub fn from_point(normal: &Vector3<f32>, point: &Vector3<f32>) -> Plane {
+        Plane {
+            normal: *normal,
+            d: -normal.dot(point),
+        }
+    }
     pub fn distance(&self, point: &Vector3<f32>) -> f32 {
         self.normal.dot(point) + self.d
     }
