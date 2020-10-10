@@ -20,7 +20,7 @@ impl Plane {
         }
     }
     pub fn distance(&self, point: &Vector3<f32>) -> f32 {
-        (point - self.random_point()).dot(&self.normal)
+        self.normal.dot(point) + self.d
     }
     pub fn random_point(&self) -> Vector3<f32> {
         if !is_zero(get_x(&self.normal)) {
