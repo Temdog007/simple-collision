@@ -21,7 +21,11 @@ pub trait Shape3D {
 
     fn center(&self) -> Vector3<f32>;
 
-    fn translate(&mut self, point: &Vector3<f32>);
+    fn translate(&self, point: &Vector3<f32>) -> Self;
 
-    fn set_center(&mut self, point: &Vector3<f32>);
+    fn set_center(&self, point: &Vector3<f32>) -> Self;
+
+    fn translate_mut(&mut self, point: &Vector3<f32>);
+
+    fn set_center_mut(&mut self, point: &Vector3<f32>);
 }

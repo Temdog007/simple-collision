@@ -33,10 +33,22 @@ impl Shape3D for Sphere {
     fn center(&self) -> Vector3<f32> {
         self.center
     }
-    fn translate(&mut self, point: &Vector3<f32>) {
+    fn translate(&self, point: &Vector3<f32>) -> Sphere {
+        Sphere {
+            center: self.center + point,
+            radius: self.radius,
+        }
+    }
+    fn set_center(&self, point: &Vector3<f32>) -> Sphere {
+        Sphere {
+            center: *point,
+            radius: self.radius,
+        }
+    }
+    fn translate_mut(&mut self, point: &Vector3<f32>) {
         self.center += point
     }
-    fn set_center(&mut self, point: &Vector3<f32>) {
+    fn set_center_mut(&mut self, point: &Vector3<f32>) {
         self.center = *point;
     }
 }

@@ -108,12 +108,24 @@ impl Shape3D for Triangle {
     fn center(&self) -> Vector3<f32> {
         (self.point1 + self.point2 + self.point3) / 3f32
     }
-    fn translate(&mut self, value: &Vector3<f32>) {
+    fn translate(&self, point: &Vector3<f32>) -> Self {
+        Triangle {
+            point1: self.point1 + point,
+            point2: self.point1 + point,
+            point3: self.point1 + point,
+        }
+    }
+    fn translate_mut(&mut self, value: &Vector3<f32>) {
         self.point1 += value;
         self.point2 += value;
         self.point3 += value;
     }
-    fn set_center(&mut self, new_center: &Vector3<f32>) {
+    fn set_center(&self, point: &Vector3<f32>) -> Self {
+        let mut t = *self;
+        t.set_center_mut(point);
+        t
+    }
+    fn set_center_mut(&mut self, new_center: &Vector3<f32>) {
         let center = self.center();
         let dist1 = self.point1 - center;
         let dist2 = self.point2 - center;

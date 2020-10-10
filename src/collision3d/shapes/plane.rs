@@ -46,6 +46,12 @@ impl Shape3D for Plane {
     fn center(&self) -> Vector3<f32> {
         from_f32(0f32)
     }
-    fn translate(&mut self, _: &Vector3<f32>) {}
-    fn set_center(&mut self, _: &Vector3<f32>) {}
+    fn translate_mut(&mut self, _: &Vector3<f32>) {}
+    fn set_center_mut(&mut self, _: &Vector3<f32>) {}
+    fn translate(&self, _: &Vector3<f32>) -> Plane {
+        *self
+    }
+    fn set_center(&self, _: &Vector3<f32>) -> Plane {
+        *self
+    }
 }

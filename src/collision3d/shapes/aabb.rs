@@ -43,23 +43,6 @@ impl AddAssign for AABB {
     }
 }
 
-impl Add<Vector3<f32>> for AABB {
-    type Output = AABB;
-
-    fn add(self, rhs: Vector3<f32>) -> Self::Output {
-        let center = self.center() + rhs;
-        let mut v = self;
-        v.set_center(&center);
-        v
-    }
-}
-
-impl AddAssign<Vector3<f32>> for AABB {
-    fn add_assign(&mut self, rhs: Vector3<f32>) {
-        *self = *self + rhs
-    }
-}
-
 impl From<AABB> for Matrix4<f32> {
     fn from(aabb: AABB) -> Matrix4<f32> {
         let mut m = Matrix4::identity();
@@ -337,13 +320,25 @@ impl Shape3D for AABB {
             (self.start.z + self.end.z) * 0.5f32,
         )
     }
-    fn translate(&mut self, point: &Vector3<f32>) {
+    fn translate(&self, point: &Vector3<f32>) -> Self {
+        AABB {
+            start: self.start + point,
+            end: self.end + point,
+        }
+    }
+    fn translate_mut(&mut self, point: &Vector3<f32>) {
         self.start += point;
         self.end += point;
     }
-    fn set_center(&mut self, point: &Vector3<f32>) {
+    fn set_center(&self, point: &Vector3<f32>) -> Self {
         let offset = Vector3::new(self.half_width(), self.half_height(), self.half_depth());
-
+        AABB {
+            start: point - offset,
+            end: point + offset,
+        }
+    }
+    fn set_center_mut(&mut self, point: &Vector3<f32>) {
+        let offset = Vector3::new(self.half_width(), self.half_height(), self.half_depth());
         self.start = point - offset;
         self.end = point + offset;
     }
