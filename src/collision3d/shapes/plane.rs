@@ -34,6 +34,9 @@ impl Plane {
         }
         panic!("Failed to find random point on plane");
     }
+    pub fn closest_point(&self, point: &Vector3<f32>) -> Vector3<f32> {
+        point - self.normal * self.distance(point)
+    }
 }
 
 impl Shape3D for Plane {

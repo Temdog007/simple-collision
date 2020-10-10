@@ -40,7 +40,7 @@ impl Sphere {
         })
     }
     pub fn get_plane_collision(&self, plane: &Plane) -> Option<CollisionResolution> {
-        let dist = (self.center - plane.random_point()).dot(&plane.normal);
+        let dist = plane.distance(&self.center);
         if dist < 0f32 || dist > self.radius {
             None
         } else {
