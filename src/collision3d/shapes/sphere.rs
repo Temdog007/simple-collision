@@ -41,28 +41,30 @@ impl Sphere {
     }
     pub fn get_plane_collision(&self, plane: &Plane) -> Option<CollisionResolution> {
         let dist = (self.center - plane.random_point()).dot(&plane.normal);
-        if 0f32 < dist && self.radius < dist {
+        if dist < 0f32 || dist > self.radius {
+            None
+        } else {
             Some(CollisionResolution {
                 normal: plane.normal,
                 penetration: self.radius - dist,
             })
-        } else {
-            None
         }
     }
     pub fn get_triangle_collision(&self, triangle: &Triangle) -> Option<CollisionResolution> {
-        let plane = triangle.to_plane();
-        match self.get_plane_collision(&plane) {
-            a @ Some(_) => {
-                let dist = (self.center - plane.random_point()).dot(&plane.normal);
-                let point = self.center - plane.normal * dist;
-                if triangle.contains(&point) {
-                    a
-                } else {
-                    None
-                }
-            }
-            None => None,
+        let normal = triangle.normal();
+        let dist = (self.center - triangle.point1).dot(&normal);
+        if dist < 0f32 || dist > self.radius {
+            return None;
+        }
+
+        let point = self.center - normal * dist;
+        if triangle.contains(&point) {
+            Some(CollisionResolution {
+                normal,
+                penetration: self.radius - dist,
+            })
+        } else {
+            None
         }
     }
 }
