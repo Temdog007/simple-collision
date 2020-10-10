@@ -23,8 +23,8 @@ impl Sphere {
 impl Shape3D for Sphere {
     fn bounding_aabb(&self) -> AABB {
         AABB {
-            start: self.center() - from_f32(self.radius),
-            end: self.center() + from_f32(self.radius),
+            start: self.center() - Vector3::from_element(self.radius),
+            end: self.center() + Vector3::from_element(self.radius),
         }
     }
     fn bounding_sphere(&self) -> Sphere {

@@ -33,18 +33,18 @@ impl Plane {
 impl Shape3D for Plane {
     fn bounding_aabb(&self) -> AABB {
         AABB {
-            start: from_f32(std::f32::MIN),
-            end: from_f32(std::f32::MAX),
+            start: Vector3::from_element(std::f32::MIN),
+            end: Vector3::from_element(std::f32::MAX),
         }
     }
     fn bounding_sphere(&self) -> Sphere {
         Sphere {
-            center: from_f32(0f32),
+            center: Vector3::from_element(0f32),
             radius: std::f32::MAX,
         }
     }
     fn center(&self) -> Vector3<f32> {
-        from_f32(0f32)
+        Vector3::from_element(0f32)
     }
     fn translate_mut(&mut self, _: &Vector3<f32>) {}
     fn set_center_mut(&mut self, _: &Vector3<f32>) {}

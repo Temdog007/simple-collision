@@ -12,11 +12,6 @@ use nalgebra::*;
 use std::cmp::Ordering;
 
 #[inline(always)]
-pub fn from_f32(f: f32) -> Vector3<f32> {
-    Vector3::new(f, f, f)
-}
-
-#[inline(always)]
 pub fn get_x(v: &Vector3<f32>) -> f32 {
     unsafe { *v.get_unchecked(0) }
 }
