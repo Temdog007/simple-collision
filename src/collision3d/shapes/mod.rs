@@ -7,6 +7,9 @@ pub use sphere::*;
 pub mod plane;
 pub use plane::*;
 
+pub mod triangle;
+pub use triangle::*;
+
 use nalgebra::*;
 
 use super::*;

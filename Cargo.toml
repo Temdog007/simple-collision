@@ -17,6 +17,9 @@ version = "1.0.116"
 optional = true
 features = ["serde_derive"]
 
+[dependencies.arrayvec]
+version = "0.5.1"
+
 [features]
 default = []
 serde-serialize = ["serde"]

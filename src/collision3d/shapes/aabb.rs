@@ -4,6 +4,8 @@ use nalgebra::*;
 use std::cmp::*;
 use std::ops::*;
 
+use arrayvec::*;
+
 #[cfg(feature = "serde-serialize")]
 use serde::{Deserialize, Serialize};
 
@@ -210,6 +212,104 @@ impl AABB {
             normal: n.normalize(),
             penetration: r - d,
         })
+    }
+    fn get_plane_collision_with_closure<T, Init, Fold>(
+        &self,
+        plane: &Plane,
+        init: Init,
+        fold: Fold,
+    ) -> Option<T>
+    where
+        Init: FnOnce() -> T,
+        Fold: FnMut(T, (&Vector3<f32>, &f32)) -> T,
+    {
+        let corners = self.corners();
+        let distances: ArrayVec<[f32; 8]> = corners
+            .iter()
+            .map(|corner| plane.distance(corner))
+            .collect();
+
+        let value: i32 = distances
+            .iter()
+            .map(|dist| if *dist > 0f32 { 1 } else { -1 })
+            .sum();
+        if value.abs() == 8 {
+            return None;
+        }
+
+        Some(corners.iter().zip(distances.iter()).fold(init(), fold))
+    }
+    pub fn get_plane_collision(&self, plane: &Plane) -> Option<CollisionResolution> {
+        let init = || CollisionResolution {
+            normal: plane.normal,
+            penetration: 0f32,
+        };
+        let fold = |mut result: CollisionResolution, (corner, &distance): (&Vector3<f32>, &f32)| {
+            let point = corner - plane.normal * distance;
+            if (point - corner).dot(&plane.normal) > 0f32 {
+                result.penetration = f32_max(result.penetration, distance.abs());
+            }
+            result
+        };
+
+        match self.get_plane_collision_with_closure(plane, init, fold) {
+            Some(result) => {
+                if is_zero(result.penetration) {
+                    None
+                } else {
+                    Some(result)
+                }
+            }
+            None => None,
+        }
+    }
+    pub fn get_triangle_collision(&self, triangle: &Triangle) -> Option<CollisionResolution> {
+        let plane = triangle.to_plane();
+        let init = || {
+            (
+                CollisionResolution {
+                    normal: plane.normal,
+                    penetration: 0f32,
+                },
+                false,
+            )
+        };
+        let fold = |(mut result, mut inside): (CollisionResolution, bool),
+                    (corner, &distance): (&Vector3<f32>, &f32)| {
+            let point = corner - plane.normal * distance;
+            if triangle.contains(&point) {
+                inside = true;
+            }
+            if (point - corner).dot(&plane.normal) > 0f32 {
+                result.penetration = f32_max(result.penetration, distance.abs());
+            }
+            (result, inside)
+        };
+        match self.get_plane_collision_with_closure(&plane, init, fold) {
+            Some((result, inside)) => {
+                if !inside || is_zero(result.penetration) {
+                    None
+                } else {
+                    Some(result)
+                }
+            }
+            None => None,
+        }
+    }
+    pub fn corners(&self) -> [Vector3<f32>; 8] {
+        let (start_x, start_y, start_z) =
+            (get_x(&self.start), get_y(&self.start), get_z(&self.start));
+        let (end_x, end_y, end_z) = (get_x(&self.end), get_y(&self.end), get_z(&self.end));
+        [
+            Vector3::new(start_x, start_y, start_z),
+            Vector3::new(start_x, start_y, end_z),
+            Vector3::new(start_x, end_y, start_z),
+            Vector3::new(start_x, end_y, end_z),
+            Vector3::new(end_x, start_y, start_z),
+            Vector3::new(end_x, start_y, end_z),
+            Vector3::new(end_x, end_y, start_z),
+            Vector3::new(end_x, end_y, end_z),
+        ]
     }
 }
 

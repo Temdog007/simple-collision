@@ -104,3 +104,14 @@ pub fn max_component(v: &Vector3<f32>) -> (usize, &f32) {
         .max_by(|(_, &f1), (_, &f2)| f32_ordering(f1, f2))
         .unwrap()
 }
+
+#[inline(always)]
+pub fn closest_to_segment(
+    start: &Vector3<f32>,
+    end: &Vector3<f32>,
+    point: &Vector3<f32>,
+) -> Vector3<f32> {
+    let ab = end - start;
+    let t = (point - start).dot(&ab) / ab.dot(&ab);
+    start + f32_min(f32_max(t, 0f32), 1f32) * ab
+}
