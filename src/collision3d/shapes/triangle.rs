@@ -93,6 +93,9 @@ impl Triangle {
             d: -normal.dot(&self.point1),
         }
     }
+    pub fn distance(&self, point: &Vector3<f32>) -> f32 {
+        (point - self.point1).dot(&self.normal())
+    }
 }
 
 impl Shape3D for Triangle {
