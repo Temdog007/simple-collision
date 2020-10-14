@@ -1,22 +1,22 @@
 use super::*;
 use nalgebra::*;
 
+use arrayvec::*;
+
 use std::cmp::*;
 use std::ops::*;
-
-use arrayvec::*;
 
 #[cfg(feature = "serde-serialize")]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-pub struct AABB<N : PhysicsScalar> {
+pub struct AABB<N: PhysicsScalar> {
     pub start: Vector3<N>,
     pub end: Vector3<N>,
 }
 
-impl<N : PhysicsScalar> Add for AABB<N> {
+impl<N: PhysicsScalar> Add for AABB<N> {
     type Output = AABB<N>;
 
     fn add(self, rhs: AABB<N>) -> Self::Output {
@@ -37,13 +37,13 @@ impl<N : PhysicsScalar> Add for AABB<N> {
     }
 }
 
-impl<N : PhysicsScalar> AddAssign for AABB<N> {
+impl<N: PhysicsScalar> AddAssign for AABB<N> {
     fn add_assign(&mut self, rhs: AABB<N>) {
         *self = *self + rhs
     }
 }
 
-impl<N : PhysicsScalar> From<AABB<N>> for Matrix4<N> {
+impl<N: PhysicsScalar> From<AABB<N>> for Matrix4<N> {
     fn from(aabb: AABB<N>) -> Matrix4<N> {
         let mut m = Matrix4::identity();
         m.append_nonuniform_scaling_mut(&Vector3::new(aabb.width(), aabb.height(), aabb.depth()));
@@ -52,7 +52,7 @@ impl<N : PhysicsScalar> From<AABB<N>> for Matrix4<N> {
     }
 }
 
-impl<N : PhysicsScalar> AABB<N> {
+impl<N: PhysicsScalar> AABB<N> {
     pub fn width(&self) -> N {
         Float::abs(self.start.x - self.end.x)
     }
@@ -113,25 +113,38 @@ impl<N : PhysicsScalar> AABB<N> {
         let overlap = Vector3::new(
             self.half_width() + aabb.half_width() - Float::abs(get_x(&n)),
             self.half_height() + aabb.half_height() - Float::abs(get_y(&n)),
-            self.half_depth() + aabb.half_depth() - Float::abs(get_z(&n))
+            self.half_depth() + aabb.half_depth() - Float::abs(get_z(&n)),
         );
-        if get_x(&overlap) > N::zero() && get_y(&overlap) > N::zero() && get_z(&overlap) > N::zero() {
+        if get_x(&overlap) > N::zero() && get_y(&overlap) > N::zero() && get_z(&overlap) > N::zero()
+        {
             let (index, &penetration) = min_component(&overlap);
             let normal = match index {
                 0 => Some(Vector3::new(
-                    if get_x(&n) < N::zero() { -N::one() } else { N::one() },
+                    if get_x(&n) < N::zero() {
+                        -N::one()
+                    } else {
+                        N::one()
+                    },
                     N::zero(),
                     N::zero(),
                 )),
                 1 => Some(Vector3::new(
                     N::zero(),
-                    if get_y(&n) < N::zero() { -N::one() } else { N::one() },
+                    if get_y(&n) < N::zero() {
+                        -N::one()
+                    } else {
+                        N::one()
+                    },
                     N::zero(),
                 )),
                 2 => Some(Vector3::new(
                     N::zero(),
                     N::zero(),
-                    if get_z(&n) < N::zero() { -N::one() } else { N::one() },
+                    if get_z(&n) < N::zero() {
+                        -N::one()
+                    } else {
+                        N::one()
+                    },
                 )),
                 _ => None,
             };
@@ -157,21 +170,36 @@ impl<N : PhysicsScalar> AABB<N> {
                         let value = get_x(&closest);
                         set_x(
                             &mut closest,
-                            get_x(&extent) * if value > N::zero() { N::one() } else { -N::one() },
+                            get_x(&extent)
+                                * if value > N::zero() {
+                                    N::one()
+                                } else {
+                                    -N::one()
+                                },
                         )
                     }
                     1 => {
                         let value = get_y(&closest);
                         set_y(
                             &mut closest,
-                            get_y(&extent) * if value > N::zero() { N::one() } else { -N::one() },
+                            get_y(&extent)
+                                * if value > N::zero() {
+                                    N::one()
+                                } else {
+                                    -N::one()
+                                },
                         )
                     }
                     2 => {
                         let value = get_z(&closest);
                         set_z(
                             &mut closest,
-                            get_z(&extent) * if value > N::zero() { N::one() } else { -N::one() },
+                            get_z(&extent)
+                                * if value > N::zero() {
+                                    N::one()
+                                } else {
+                                    -N::one()
+                                },
                         )
                     }
                     _ => (),
@@ -204,7 +232,7 @@ impl<N : PhysicsScalar> AABB<N> {
     ) -> Option<T>
     where
         Init: FnOnce() -> T,
-        Fold: FnMut(T, (&Vector3<N>, &N)) -> T,
+        Fold: FnMut(T, (&Vector3<N>, N)) -> T,
     {
         let corners = self.corners();
         let distances: ArrayVec<[N; 8]> = corners
@@ -220,14 +248,19 @@ impl<N : PhysicsScalar> AABB<N> {
             return None;
         }
 
-        Some(corners.iter().zip(distances.iter()).fold(init(), fold))
+        Some(
+            corners
+                .iter()
+                .zip(distances.into_iter())
+                .fold(init(), fold),
+        )
     }
     pub fn get_plane_collision(&self, plane: &Plane<N>) -> Option<CollisionResolution<N>> {
         let init = || CollisionResolution {
             normal: plane.normal,
             penetration: N::zero(),
         };
-        let fold = |mut result: CollisionResolution<N>, (corner, &distance): (&Vector3<N>, &N)| {
+        let fold = |mut result: CollisionResolution<N>, (corner, distance): (&Vector3<N>, N)| {
             let point = corner - plane.normal * distance;
             if (point - corner).dot(&plane.normal) > N::zero() {
                 result.penetration = n_max(result.penetration, Float::abs(distance));
@@ -250,7 +283,7 @@ impl<N : PhysicsScalar> AABB<N> {
         let plane = triangle.to_plane();
         let init = || {
             (
-                CollisionResolution{
+                CollisionResolution {
                     normal: plane.normal,
                     penetration: N::zero(),
                 },
@@ -258,7 +291,7 @@ impl<N : PhysicsScalar> AABB<N> {
             )
         };
         let fold = |(mut result, mut inside): (CollisionResolution<N>, bool),
-                    (corner, &distance): (&Vector3<N>, &N)| {
+                    (corner, distance): (&Vector3<N>, N)| {
             let point = corner - plane.normal * distance;
             if triangle.contains(&point) {
                 inside = true;
@@ -296,7 +329,7 @@ impl<N : PhysicsScalar> AABB<N> {
     }
 }
 
-impl<N : PhysicsScalar> Shape3D<N> for AABB<N> {
+impl<N: PhysicsScalar> Shape3D<N> for AABB<N> {
     fn bounding_aabb(&self) -> AABB<N> {
         *self
     }

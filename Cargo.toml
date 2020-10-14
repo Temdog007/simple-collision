@@ -1,6 +1,6 @@
 [package]
 name = "simple-collision"
-version = "0.1.9"
+version = "0.1.10"
 authors = ["<temdog007@yahoo.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -12,7 +12,7 @@ repository = "https://github.com/Temdog007/simple-collision"
 version = "0.2.12"
 
 [dependencies.nalgebra]
-version = "0.22.0"
+version = "0.22.1"
 features = ["serde-serialize"]
 
 [dependencies.serde]
