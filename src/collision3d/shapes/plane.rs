@@ -7,60 +7,60 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-pub struct Plane {
-    pub normal: Vector3<f32>,
-    pub d: f32,
+pub struct Plane<N: PhysicsScalar> {
+    pub normal: Vector3<N>,
+    pub d: N,
 }
 
-impl Plane {
-    pub fn from_point(normal: &Vector3<f32>, point: &Vector3<f32>) -> Plane {
+impl<N: PhysicsScalar> Plane<N> {
+    pub fn from_point(normal: &Vector3<N>, point: &Vector3<N>) -> Self {
         Plane {
             normal: *normal,
             d: -normal.dot(point),
         }
     }
-    pub fn distance(&self, point: &Vector3<f32>) -> f32 {
+    pub fn distance(&self, point: &Vector3<N>) -> N {
         self.normal.dot(point) + self.d
     }
-    pub fn random_point(&self) -> Vector3<f32> {
+    pub fn random_point(&self) -> Vector3<N> {
         if !is_zero(get_x(&self.normal)) {
-            return Vector3::new(-self.d / get_x(&self.normal), 0f32, 0f32);
+            return Vector3::new(-self.d / get_x(&self.normal), N::zero(), N::zero());
         }
         if !is_zero(get_y(&self.normal)) {
-            return Vector3::new(0f32, -self.d / get_y(&self.normal), 0f32);
+            return Vector3::new(N::zero(), -self.d / get_y(&self.normal), N::zero());
         }
         if !is_zero(get_z(&self.normal)) {
-            return Vector3::new(0f32, 0f32, -self.d / get_z(&self.normal));
+            return Vector3::new(N::zero(), N::zero(), -self.d / get_z(&self.normal));
         }
         panic!("Failed to find random point on plane");
     }
-    pub fn closest_point(&self, point: &Vector3<f32>) -> Vector3<f32> {
+    pub fn closest_point(&self, point: &Vector3<N>) -> Vector3<N> {
         point - self.normal * self.distance(point)
     }
 }
 
-impl Shape3D for Plane {
-    fn bounding_aabb(&self) -> AABB {
+impl<N: PhysicsScalar> Shape3D<N> for Plane<N> {
+    fn bounding_aabb(&self) -> AABB<N> {
         AABB {
-            start: Vector3::from_element(std::f32::MIN),
-            end: Vector3::from_element(std::f32::MAX),
+            start: Vector3::from_element(Bounded::min_value()),
+            end: Vector3::from_element(Bounded::max_value()),
         }
     }
-    fn bounding_sphere(&self) -> Sphere {
+    fn bounding_sphere(&self) -> Sphere<N> {
         Sphere {
-            center: Vector3::from_element(0f32),
-            radius: std::f32::MAX,
+            center: Vector3::from_element(N::zero()),
+            radius: Bounded::max_value(),
         }
     }
-    fn center(&self) -> Vector3<f32> {
-        Vector3::from_element(0f32)
+    fn center(&self) -> Vector3<N> {
+        Vector3::from_element(N::zero())
     }
-    fn translate_mut(&mut self, _: &Vector3<f32>) {}
-    fn set_center_mut(&mut self, _: &Vector3<f32>) {}
-    fn translate(&self, _: &Vector3<f32>) -> Plane {
+    fn translate_mut(&mut self, _: &Vector3<N>) {}
+    fn set_center_mut(&mut self, _: &Vector3<N>) {}
+    fn translate(&self, _: &Vector3<N>) -> Self {
         *self
     }
-    fn set_center(&self, _: &Vector3<f32>) -> Plane {
+    fn set_center(&self, _: &Vector3<N>) -> Self {
         *self
     }
 }

@@ -8,6 +8,9 @@ description = "A simple collision detection library"
 keywords = ["collision"]
 repository = "https://github.com/Temdog007/simple-collision"
 
+[dependencies.num-traits]
+version = "0.2.12"
+
 [dependencies.nalgebra]
 version = "0.22.0"
 features = ["serde-serialize"]

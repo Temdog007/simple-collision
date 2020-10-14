@@ -8,40 +8,56 @@ pub mod ray;
 pub use ray::*;
 
 use nalgebra::*;
+use num_traits::*;
 
 use std::cmp::Ordering;
 
+pub trait PhysicsScalar:
+    Scalar
+    + Float
+    + Pow<Self, Output = Self>
+    + One
+    + SimdComplexField<SimdRealField = Self>
+    + RealField
+    + FromPrimitive
+    + ToPrimitive
+{
+}
+
+impl PhysicsScalar for f32 {}
+impl PhysicsScalar for f64 {}
+
 #[inline(always)]
-pub fn get_x(v: &Vector3<f32>) -> f32 {
+pub fn get_x<N: PhysicsScalar>(v: &Vector3<N>) -> N {
     unsafe { *v.get_unchecked(0) }
 }
 
 #[inline(always)]
-pub fn get_y(v: &Vector3<f32>) -> f32 {
+pub fn get_y<N: PhysicsScalar>(v: &Vector3<N>) -> N {
     unsafe { *v.get_unchecked(1) }
 }
 
 #[inline(always)]
-pub fn get_z(v: &Vector3<f32>) -> f32 {
+pub fn get_z<N: PhysicsScalar>(v: &Vector3<N>) -> N {
     unsafe { *v.get_unchecked(2) }
 }
 
 #[inline(always)]
-pub fn set_x(v: &mut Vector3<f32>, value: f32) {
+pub fn set_x<N: PhysicsScalar>(v: &mut Vector3<N>, value: N) {
     unsafe { *v.get_unchecked_mut(0) = value }
 }
 
 #[inline(always)]
-pub fn set_y(v: &mut Vector3<f32>, value: f32) {
+pub fn set_y<N: PhysicsScalar>(v: &mut Vector3<N>, value: N) {
     unsafe { *v.get_unchecked_mut(1) = value }
 }
 
 #[inline(always)]
-pub fn set_z(v: &mut Vector3<f32>, value: f32) {
+pub fn set_z<N: PhysicsScalar>(v: &mut Vector3<N>, value: N) {
     unsafe { *v.get_unchecked_mut(2) = value }
 }
 
-pub fn f32_ordering(a: f32, b: f32) -> Ordering {
+pub fn n_ordering<N: PhysicsScalar>(a: N, b: N) -> Ordering {
     match a.partial_cmp(&b) {
         Some(o) => o,
         None => Ordering::Equal,
@@ -49,7 +65,7 @@ pub fn f32_ordering(a: f32, b: f32) -> Ordering {
 }
 
 #[inline(always)]
-pub fn f32_min(a: f32, b: f32) -> f32 {
+pub fn n_min<N: PhysicsScalar>(a: N, b: N) -> N {
     if a < b {
         a
     } else {
@@ -58,7 +74,7 @@ pub fn f32_min(a: f32, b: f32) -> f32 {
 }
 
 #[inline(always)]
-pub fn f32_max(a: f32, b: f32) -> f32 {
+pub fn n_max<N: PhysicsScalar>(a: N, b: N) -> N {
     if a > b {
         a
     } else {
@@ -67,7 +83,7 @@ pub fn f32_max(a: f32, b: f32) -> f32 {
 }
 
 #[inline(always)]
-pub fn clamp(value: f32, min: f32, max: f32) -> f32 {
+pub fn clamp<N: PhysicsScalar>(value: N, min: N, max: N) -> N {
     assert!(min <= max);
     let mut x = value;
     if x < min {
@@ -80,33 +96,33 @@ pub fn clamp(value: f32, min: f32, max: f32) -> f32 {
 }
 
 #[inline(always)]
-pub fn is_zero(a: f32) -> bool {
-    a.abs() < std::f32::EPSILON
+pub fn is_zero<N: PhysicsScalar>(a: N) -> bool {
+    Float::abs(a) < N::epsilon()
 }
 
 #[inline(always)]
-pub fn min_component(v: &Vector3<f32>) -> (usize, &f32) {
+pub fn min_component<N: PhysicsScalar>(v: &Vector3<N>) -> (usize, &N) {
     v.iter()
         .enumerate()
-        .min_by(|(_, &f1), (_, &f2)| f32_ordering(f1, f2))
+        .min_by(|(_, &f1), (_, &f2)| n_ordering(f1, f2))
         .unwrap()
 }
 
 #[inline(always)]
-pub fn max_component(v: &Vector3<f32>) -> (usize, &f32) {
+pub fn max_component<N: PhysicsScalar>(v: &Vector3<N>) -> (usize, &N) {
     v.iter()
         .enumerate()
-        .max_by(|(_, &f1), (_, &f2)| f32_ordering(f1, f2))
+        .max_by(|(_, &f1), (_, &f2)| n_ordering(f1, f2))
         .unwrap()
 }
 
 #[inline(always)]
-pub fn closest_to_segment(
-    start: &Vector3<f32>,
-    end: &Vector3<f32>,
-    point: &Vector3<f32>,
-) -> Vector3<f32> {
-    let ab = end - start;
-    let t = (point - start).dot(&ab) / ab.dot(&ab);
-    start + f32_min(f32_max(t, 0f32), 1f32) * ab
+pub fn closest_to_segment<N: PhysicsScalar>(
+    start: &Vector3<N>,
+    end: &Vector3<N>,
+    point: &Vector3<N>,
+) -> Vector3<N> {
+    let ab: Vector3<N> = end - start;
+    let t: N = (point - start).dot(&ab) / ab.dot(&ab);
+    start + ab * n_min(n_max(t, N::zero()), N::one())
 }

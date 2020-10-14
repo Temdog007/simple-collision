@@ -14,18 +14,18 @@ use nalgebra::*;
 
 use super::*;
 
-pub trait Shape3D {
-    fn bounding_aabb(&self) -> AABB;
+pub trait Shape3D<N : PhysicsScalar> {
+    fn bounding_aabb(&self) -> AABB<N>;
 
-    fn bounding_sphere(&self) -> Sphere;
+    fn bounding_sphere(&self) -> Sphere<N>;
 
-    fn center(&self) -> Vector3<f32>;
+    fn center(&self) -> Vector3<N>;
 
-    fn translate(&self, point: &Vector3<f32>) -> Self;
+    fn translate(&self, point: &Vector3<N>) -> Self;
 
-    fn set_center(&self, point: &Vector3<f32>) -> Self;
+    fn set_center(&self, point: &Vector3<N>) -> Self;
 
-    fn translate_mut(&mut self, point: &Vector3<f32>);
+    fn translate_mut(&mut self, point: &Vector3<N>);
 
-    fn set_center_mut(&mut self, point: &Vector3<f32>);
+    fn set_center_mut(&mut self, point: &Vector3<N>);
 }

@@ -6,32 +6,32 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-pub struct Sphere {
-    pub center: Vector3<f32>,
-    pub radius: f32,
+pub struct Sphere<N : PhysicsScalar> {
+    pub center: Vector3<N>,
+    pub radius: N,
 }
 
-impl Sphere {
-    pub fn new(center: &Vector3<f32>, radius: f32) -> Sphere {
+impl<N : PhysicsScalar> Sphere<N> {
+    pub fn new(center: &Vector3<N>, radius: N) -> Self {
         Sphere {
             center: *center,
             radius,
         }
     }
-    pub fn get_sphere_collision(&self, sphere: &Sphere) -> Option<CollisionResolution> {
+    pub fn get_sphere_collision(&self, sphere: &Sphere<N>) -> Option<CollisionResolution<N>> {
         let n = self.center - sphere.center;
-        let r = (self.radius + sphere.radius).powi(2);
+        let r = (self.radius + sphere.radius).pow(N::from_usize(2).unwrap());
 
         let len = n.magnitude_squared();
         if len > r {
             return None;
         }
 
-        let d = len.sqrt();
+        let d = Float::sqrt(len);
         let (normal, penetration) = if is_zero(d) {
-            (Vector3::new(1f32, 0f32, 0f32), self.radius)
+            (Vector3::new(N::one(), N::zero(), N::zero()), self.radius)
         } else {
-            let pen = r.sqrt() - d;
+            let pen = Float::sqrt(r) - d;
             (n.normalize(), pen)
         };
         Some(CollisionResolution {
@@ -39,9 +39,9 @@ impl Sphere {
             penetration,
         })
     }
-    pub fn get_plane_collision(&self, plane: &Plane) -> Option<CollisionResolution> {
+    pub fn get_plane_collision(&self, plane: &Plane<N>) -> Option<CollisionResolution<N>> {
         let dist = plane.distance(&self.center);
-        if dist < 0f32 || dist > self.radius {
+        if dist < N::zero() || dist > self.radius {
             None
         } else {
             Some(CollisionResolution {
@@ -50,10 +50,10 @@ impl Sphere {
             })
         }
     }
-    pub fn get_triangle_collision(&self, triangle: &Triangle) -> Option<CollisionResolution> {
+    pub fn get_triangle_collision(&self, triangle: &Triangle<N>) -> Option<CollisionResolution<N>> {
         let normal = triangle.normal();
         let dist = (self.center - triangle.point1).dot(&normal);
-        if dist < 0f32 || dist > self.radius {
+        if dist < N::zero() || dist > self.radius {
             return None;
         }
 
@@ -69,35 +69,35 @@ impl Sphere {
     }
 }
 
-impl Shape3D for Sphere {
-    fn bounding_aabb(&self) -> AABB {
+impl<N : PhysicsScalar> Shape3D<N> for Sphere<N> {
+    fn bounding_aabb(&self) -> AABB<N> {
         AABB {
             start: self.center() - Vector3::from_element(self.radius),
             end: self.center() + Vector3::from_element(self.radius),
         }
     }
-    fn bounding_sphere(&self) -> Sphere {
+    fn bounding_sphere(&self) -> Sphere<N> {
         *self
     }
-    fn center(&self) -> Vector3<f32> {
+    fn center(&self) -> Vector3<N> {
         self.center
     }
-    fn translate(&self, point: &Vector3<f32>) -> Sphere {
+    fn translate(&self, point: &Vector3<N>) -> Sphere<N> {
         Sphere {
             center: self.center + point,
             radius: self.radius,
         }
     }
-    fn set_center(&self, point: &Vector3<f32>) -> Sphere {
+    fn set_center(&self, point: &Vector3<N>) -> Sphere<N> {
         Sphere {
             center: *point,
             radius: self.radius,
         }
     }
-    fn translate_mut(&mut self, point: &Vector3<f32>) {
+    fn translate_mut(&mut self, point: &Vector3<N>) {
         self.center += point
     }
-    fn set_center_mut(&mut self, point: &Vector3<f32>) {
+    fn set_center_mut(&mut self, point: &Vector3<N>) {
         self.center = *point;
     }
 }
