@@ -21,8 +21,10 @@ pub trait Shape3D<N : PhysicsScalar> {
 
     fn center(&self) -> Vector3<N>;
 
+    #[must_use = "Did you mean to use translate_mut()?"]
     fn translate(&self, point: &Vector3<N>) -> Self;
 
+    #[must_use = "Did you mean to use set_center_mut()?"]
     fn set_center(&self, point: &Vector3<N>) -> Self;
 
     fn translate_mut(&mut self, point: &Vector3<N>);
