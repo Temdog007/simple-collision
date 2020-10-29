@@ -18,6 +18,22 @@ pub struct AxisAlignedBoundingBox<N: PhysicsScalar> {
 
 pub type AABB<N> = AxisAlignedBoundingBox<N>;
 
+impl<N: PhysicsScalar> FromIterator<Vector3<N>> for AxisAlignedBoundingBox<N> {
+    fn from_iter<T: IntoIterator<Item = Vector3<N>>>(iter: T) -> Self {
+        let mut start = Vector3::from_element(Bounded::max_value());
+        let mut end = Vector3::from_element(Bounded::min_value());
+        for v in iter {
+            for (s, point) in start.iter_mut().zip(v.iter()) {
+                *s = num_traits::clamp_min(*s, *point);
+            }
+            for (s, point) in end.iter_mut().zip(v.iter()) {
+                *s = num_traits::clamp_max(*s, *point);
+            }
+        }
+        AxisAlignedBoundingBox { start, end }
+    }
+}
+
 impl<'a, N: PhysicsScalar> FromIterator<&'a Vector3<N>> for AxisAlignedBoundingBox<N> {
     fn from_iter<T: IntoIterator<Item = &'a Vector3<N>>>(iter: T) -> Self {
         let mut start = Vector3::from_element(Bounded::max_value());
