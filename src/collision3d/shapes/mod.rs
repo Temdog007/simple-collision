@@ -15,7 +15,7 @@ use nalgebra::*;
 use super::*;
 
 pub trait Shape3D<N : PhysicsScalar> {
-    fn bounding_aabb(&self) -> AABB<N>;
+    fn bounding_aabb(&self) -> AxisAlignedBoundingBox<N>;
 
     fn bounding_sphere(&self) -> Sphere<N>;
 

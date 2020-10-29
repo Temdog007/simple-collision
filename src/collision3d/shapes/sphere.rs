@@ -70,8 +70,8 @@ impl<N : PhysicsScalar> Sphere<N> {
 }
 
 impl<N : PhysicsScalar> Shape3D<N> for Sphere<N> {
-    fn bounding_aabb(&self) -> AABB<N> {
-        AABB {
+    fn bounding_aabb(&self) -> AxisAlignedBoundingBox<N> {
+        AxisAlignedBoundingBox {
             start: self.center() - Vector3::from_element(self.radius),
             end: self.center() + Vector3::from_element(self.radius),
         }

@@ -99,8 +99,8 @@ impl<N: PhysicsScalar> Triangle<N> {
 }
 
 impl<N: PhysicsScalar> Shape3D<N> for Triangle<N> {
-    fn bounding_aabb(&self) -> AABB<N> {
-        AABB {
+    fn bounding_aabb(&self) -> AxisAlignedBoundingBox<N> {
+        AxisAlignedBoundingBox {
             start: Vector3::from_element(Bounded::min_value()),
             end: Vector3::from_element(Bounded::max_value()),
         }

@@ -3,6 +3,7 @@ use nalgebra::*;
 
 use arrayvec::*;
 use std::cmp::*;
+use std::iter::FromIterator;
 use std::ops::*;
 
 #[cfg(feature = "serde-serialize")]
@@ -10,13 +11,15 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-pub struct AABB<N: PhysicsScalar> {
+pub struct AxisAlignedBoundingBox<N: PhysicsScalar> {
     pub start: Vector3<N>,
     pub end: Vector3<N>,
 }
 
-impl<'a, N: PhysicsScalar, I: Iterator<Item = &'a Vector3<N>>> From<I> for AABB<N> {
-    fn from(iter: I) -> Self {
+pub type AABB<N> = AxisAlignedBoundingBox<N>;
+
+impl<'a, N: PhysicsScalar> FromIterator<&'a Vector3<N>> for AxisAlignedBoundingBox<N> {
+    fn from_iter<T: IntoIterator<Item = &'a Vector3<N>>>(iter: T) -> Self {
         let mut start = Vector3::from_element(Bounded::max_value());
         let mut end = Vector3::from_element(Bounded::min_value());
         for v in iter {
@@ -24,20 +27,20 @@ impl<'a, N: PhysicsScalar, I: Iterator<Item = &'a Vector3<N>>> From<I> for AABB<
                 *s = num_traits::clamp_min(*s, *point);
             }
             for (s, point) in end.iter_mut().zip(v.iter()) {
-                *s =  num_traits::clamp_max(*s, *point);
+                *s = num_traits::clamp_max(*s, *point);
             }
         }
-        AABB { start, end }
+        AxisAlignedBoundingBox { start, end }
     }
 }
 
-impl<N: PhysicsScalar> Add for AABB<N> {
-    type Output = AABB<N>;
+impl<N: PhysicsScalar> Add for AxisAlignedBoundingBox<N> {
+    type Output = AxisAlignedBoundingBox<N>;
 
-    fn add(self, rhs: AABB<N>) -> Self::Output {
+    fn add(self, rhs: AxisAlignedBoundingBox<N>) -> Self::Output {
         let (min_vec1, max_vec1) = self.min_max();
         let (min_vec2, max_vec2) = rhs.min_max();
-        AABB {
+        AxisAlignedBoundingBox {
             start: Vector3::new(
                 n_min(get_x(&min_vec1), get_x(&max_vec1)),
                 n_min(get_y(&min_vec1), get_y(&max_vec1)),
@@ -52,14 +55,14 @@ impl<N: PhysicsScalar> Add for AABB<N> {
     }
 }
 
-impl<N: PhysicsScalar> AddAssign for AABB<N> {
-    fn add_assign(&mut self, rhs: AABB<N>) {
+impl<N: PhysicsScalar> AddAssign for AxisAlignedBoundingBox<N> {
+    fn add_assign(&mut self, rhs: AxisAlignedBoundingBox<N>) {
         *self = *self + rhs
     }
 }
 
-impl<N: PhysicsScalar> From<AABB<N>> for Matrix4<N> {
-    fn from(aabb: AABB<N>) -> Matrix4<N> {
+impl<N: PhysicsScalar> From<AxisAlignedBoundingBox<N>> for Matrix4<N> {
+    fn from(aabb: AxisAlignedBoundingBox<N>) -> Matrix4<N> {
         let mut m = Matrix4::identity();
         m.append_nonuniform_scaling_mut(&Vector3::new(aabb.width(), aabb.height(), aabb.depth()));
         m.append_translation_mut(&aabb.center());
@@ -67,7 +70,7 @@ impl<N: PhysicsScalar> From<AABB<N>> for Matrix4<N> {
     }
 }
 
-impl<N: PhysicsScalar> AABB<N> {
+impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
     pub fn width(&self) -> N {
         Float::abs(self.start.x - self.end.x)
     }
@@ -123,7 +126,10 @@ impl<N: PhysicsScalar> AABB<N> {
             .map(|(i, f)| (i, *f))
             .unwrap()
     }
-    pub fn get_aabb_collision(&self, aabb: &AABB<N>) -> Option<CollisionResolution<N>> {
+    pub fn get_aabb_collision(
+        &self,
+        aabb: &AxisAlignedBoundingBox<N>,
+    ) -> Option<CollisionResolution<N>> {
         let n = self.center() - aabb.center();
         let overlap = Vector3::new(
             self.half_width() + aabb.half_width() - Float::abs(get_x(&n)),
@@ -339,8 +345,8 @@ impl<N: PhysicsScalar> AABB<N> {
     }
 }
 
-impl<N: PhysicsScalar> Shape3D<N> for AABB<N> {
-    fn bounding_aabb(&self) -> AABB<N> {
+impl<N: PhysicsScalar> Shape3D<N> for AxisAlignedBoundingBox<N> {
+    fn bounding_aabb(&self) -> AxisAlignedBoundingBox<N> {
         *self
     }
     fn bounding_sphere(&self) -> Sphere<N> {
@@ -364,7 +370,7 @@ impl<N: PhysicsScalar> Shape3D<N> for AABB<N> {
         )
     }
     fn translate(&self, point: &Vector3<N>) -> Self {
-        AABB {
+        AxisAlignedBoundingBox {
             start: self.start + point,
             end: self.end + point,
         }
@@ -375,7 +381,7 @@ impl<N: PhysicsScalar> Shape3D<N> for AABB<N> {
     }
     fn set_center(&self, point: &Vector3<N>) -> Self {
         let offset = Vector3::new(self.half_width(), self.half_height(), self.half_depth());
-        AABB {
+        AxisAlignedBoundingBox {
             start: point - offset,
             end: point + offset,
         }
