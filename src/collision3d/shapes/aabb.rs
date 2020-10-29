@@ -24,10 +24,10 @@ impl<N: PhysicsScalar> FromIterator<Vector3<N>> for AxisAlignedBoundingBox<N> {
         let mut end = Vector3::from_element(Bounded::min_value());
         for v in iter {
             for (s, point) in start.iter_mut().zip(v.iter()) {
-                *s = num_traits::clamp_min(*s, *point);
+                *s = n_min(*point, *s);
             }
             for (s, point) in end.iter_mut().zip(v.iter()) {
-                *s = num_traits::clamp_max(*s, *point);
+                *s = n_max(*point, *s);
             }
         }
         AxisAlignedBoundingBox { start, end }
