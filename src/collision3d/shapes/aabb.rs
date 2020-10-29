@@ -2,7 +2,6 @@ use super::*;
 use nalgebra::*;
 
 use arrayvec::*;
-
 use std::cmp::*;
 use std::ops::*;
 
@@ -14,6 +13,22 @@ use serde::{Deserialize, Serialize};
 pub struct AABB<N: PhysicsScalar> {
     pub start: Vector3<N>,
     pub end: Vector3<N>,
+}
+
+impl<'a, N: PhysicsScalar, I: Iterator<Item = &'a Vector3<N>>> From<I> for AABB<N> {
+    fn from(iter: I) -> Self {
+        let mut start = Vector3::from_element(Bounded::max_value());
+        let mut end = Vector3::from_element(Bounded::min_value());
+        for v in iter {
+            for (s, point) in start.iter_mut().zip(v.iter()) {
+                *s = num_traits::clamp_min(*s, *point);
+            }
+            for (s, point) in end.iter_mut().zip(v.iter()) {
+                *s =  num_traits::clamp_max(*s, *point);
+            }
+        }
+        AABB { start, end }
+    }
 }
 
 impl<N: PhysicsScalar> Add for AABB<N> {
@@ -248,12 +263,7 @@ impl<N: PhysicsScalar> AABB<N> {
             return None;
         }
 
-        Some(
-            corners
-                .iter()
-                .zip(distances.into_iter())
-                .fold(init(), fold),
-        )
+        Some(corners.iter().zip(distances.into_iter()).fold(init(), fold))
     }
     pub fn get_plane_collision(&self, plane: &Plane<N>) -> Option<CollisionResolution<N>> {
         let init = || CollisionResolution {
