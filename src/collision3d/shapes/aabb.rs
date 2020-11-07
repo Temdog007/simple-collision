@@ -466,4 +466,14 @@ mod tests {
             std::f32::EPSILON,
         );
     }
+    #[test]
+    fn dim_test() {
+        let aabb = AxisAlignedBoundingBox {
+            start: Vector3::<f32>::new(0f32, 10f32, 20f32),
+            end: Vector3::<f32>::new(-50f32, 100f32, 100f32),
+        };
+
+        assert_eq!(aabb.largest_dim(), (1, 90f32));
+        assert_eq!(aabb.smallest_dim(), (0, 50f32));
+    }
 }
