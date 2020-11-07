@@ -334,6 +334,9 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
             Vector3::new(end_x, end_y, end_z),
         ]
     }
+    pub fn iter(&self) -> impl Iterator<Item = N> + '_ {
+        self.start.iter().chain(self.end.iter()).cloned()
+    }
 }
 
 impl<N: PhysicsScalar> Shape3D<N> for AxisAlignedBoundingBox<N> {

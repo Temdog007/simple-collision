@@ -111,6 +111,13 @@ impl<N: PhysicsScalar> Triangle<N> {
     pub fn max_z(&self) -> N {
         self.get_z(|acc, f| n_max(acc, *f))
     }
+    pub fn iter(&self) -> impl Iterator<Item = N> + '_ {
+        self.point1
+            .iter()
+            .chain(self.point2.iter())
+            .chain(self.point3.iter())
+            .cloned()
+    }
 }
 
 impl<N: PhysicsScalar> Shape3D<N> for Triangle<N> {
