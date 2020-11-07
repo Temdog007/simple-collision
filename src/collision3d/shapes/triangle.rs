@@ -14,31 +14,19 @@ pub struct Triangle<N: PhysicsScalar> {
 
 impl<N: PhysicsScalar> Triangle<N> {
     pub fn x_width(&self) -> N {
-        let arr = [
-            get_x(&self.point1),
-            get_x(&self.point2),
-            get_x(&self.point3),
-        ];
+        let arr = [self.point1.x, self.point2.x, self.point3.x];
         let min_value = arr.iter().min_by(|&a, &b| n_ordering(*a, *b)).unwrap();
         let max_value = arr.iter().max_by(|&a, &b| n_ordering(*a, *b)).unwrap();
         *max_value - *min_value
     }
     pub fn y_width(&self) -> N {
-        let arr = [
-            get_y(&self.point1),
-            get_y(&self.point2),
-            get_y(&self.point3),
-        ];
+        let arr = [self.point1.y, self.point2.y, self.point3.y];
         let min_value = arr.iter().min_by(|&a, &b| n_ordering(*a, *b)).unwrap();
         let max_value = arr.iter().max_by(|&a, &b| n_ordering(*a, *b)).unwrap();
         *max_value - *min_value
     }
     pub fn z_width(&self) -> N {
-        let arr = [
-            get_z(&self.point1),
-            get_z(&self.point2),
-            get_z(&self.point3),
-        ];
+        let arr = [self.point1.z, self.point2.z, self.point3.z];
         let min_value = arr.iter().min_by(|&a, &b| n_ordering(*a, *b)).unwrap();
         let max_value = arr.iter().max_by(|&a, &b| n_ordering(*a, *b)).unwrap();
         *max_value - *min_value
@@ -96,13 +84,40 @@ impl<N: PhysicsScalar> Triangle<N> {
     pub fn distance(&self, point: &Vector3<N>) -> N {
         (point - self.point1).dot(&self.normal())
     }
+    fn get_x<F: FnMut(N, &N) -> N>(&self, f: F) -> N {
+        [self.point1.x, self.point2.x].iter().fold(self.point3.x, f)
+    }
+    pub fn min_x(&self) -> N {
+        self.get_x(|acc, f| n_min(acc, *f))
+    }
+    pub fn max_x(&self) -> N {
+        self.get_x(|acc, f| n_max(acc, *f))
+    }
+    fn get_y<F: FnMut(N, &N) -> N>(&self, f: F) -> N {
+        [self.point1.y, self.point2.y].iter().fold(self.point3.y, f)
+    }
+    pub fn min_y(&self) -> N {
+        self.get_y(|acc, f| n_min(acc, *f))
+    }
+    pub fn max_y(&self) -> N {
+        self.get_y(|acc, f| n_max(acc, *f))
+    }
+    fn get_z<F: FnMut(N, &N) -> N>(&self, f: F) -> N {
+        [self.point1.z, self.point2.z].iter().fold(self.point3.z, f)
+    }
+    pub fn min_z(&self) -> N {
+        self.get_z(|acc, f| n_min(acc, *f))
+    }
+    pub fn max_z(&self) -> N {
+        self.get_z(|acc, f| n_max(acc, *f))
+    }
 }
 
 impl<N: PhysicsScalar> Shape3D<N> for Triangle<N> {
     fn bounding_aabb(&self) -> AxisAlignedBoundingBox<N> {
         AxisAlignedBoundingBox {
-            start: Vector3::from_element(Bounded::min_value()),
-            end: Vector3::from_element(Bounded::max_value()),
+            start: Vector3::new(self.min_x(), self.min_y(), self.min_z()),
+            end: Vector3::new(self.max_x(), self.max_y(), self.max_z()),
         }
     }
     fn bounding_sphere(&self) -> Sphere<N> {
@@ -114,8 +129,8 @@ impl<N: PhysicsScalar> Shape3D<N> for Triangle<N> {
     fn translate(&self, point: &Vector3<N>) -> Self {
         Triangle {
             point1: self.point1 + point,
-            point2: self.point1 + point,
-            point3: self.point1 + point,
+            point2: self.point2 + point,
+            point3: self.point3 + point,
         }
     }
     fn translate_mut(&mut self, value: &Vector3<N>) {

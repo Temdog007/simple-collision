@@ -28,36 +28,7 @@ impl PhysicsScalar for f32 {}
 impl PhysicsScalar for f64 {}
 
 #[inline(always)]
-pub fn get_x<N: PhysicsScalar>(v: &Vector3<N>) -> N {
-    unsafe { *v.get_unchecked(0) }
-}
-
-#[inline(always)]
-pub fn get_y<N: PhysicsScalar>(v: &Vector3<N>) -> N {
-    unsafe { *v.get_unchecked(1) }
-}
-
-#[inline(always)]
-pub fn get_z<N: PhysicsScalar>(v: &Vector3<N>) -> N {
-    unsafe { *v.get_unchecked(2) }
-}
-
-#[inline(always)]
-pub fn set_x<N: PhysicsScalar>(v: &mut Vector3<N>, value: N) {
-    unsafe { *v.get_unchecked_mut(0) = value }
-}
-
-#[inline(always)]
-pub fn set_y<N: PhysicsScalar>(v: &mut Vector3<N>, value: N) {
-    unsafe { *v.get_unchecked_mut(1) = value }
-}
-
-#[inline(always)]
-pub fn set_z<N: PhysicsScalar>(v: &mut Vector3<N>, value: N) {
-    unsafe { *v.get_unchecked_mut(2) = value }
-}
-
-pub fn n_ordering<N: PhysicsScalar>(a: N, b: N) -> Ordering {
+pub(crate) fn n_ordering<N: PhysicsScalar>(a: N, b: N) -> Ordering {
     match a.partial_cmp(&b) {
         Some(o) => o,
         None => Ordering::Equal,
@@ -65,7 +36,7 @@ pub fn n_ordering<N: PhysicsScalar>(a: N, b: N) -> Ordering {
 }
 
 #[inline(always)]
-pub fn n_min<N: PhysicsScalar>(a: N, b: N) -> N {
+pub(crate) fn n_min<N: PhysicsScalar>(a: N, b: N) -> N {
     if a < b {
         a
     } else {
@@ -74,7 +45,7 @@ pub fn n_min<N: PhysicsScalar>(a: N, b: N) -> N {
 }
 
 #[inline(always)]
-pub fn n_max<N: PhysicsScalar>(a: N, b: N) -> N {
+pub(crate) fn n_max<N: PhysicsScalar>(a: N, b: N) -> N {
     if a > b {
         a
     } else {
@@ -83,41 +54,28 @@ pub fn n_max<N: PhysicsScalar>(a: N, b: N) -> N {
 }
 
 #[inline(always)]
-pub fn clamp<N: PhysicsScalar>(value: N, min: N, max: N) -> N {
-    assert!(min <= max);
-    let mut x = value;
-    if x < min {
-        x = min;
-    }
-    if x > max {
-        x = max;
-    }
-    x
-}
-
-#[inline(always)]
-pub fn is_zero<N: PhysicsScalar>(a: N) -> bool {
+pub(crate) fn is_zero<N: PhysicsScalar>(a: N) -> bool {
     Float::abs(a) < N::epsilon()
 }
 
 #[inline(always)]
-pub fn min_component<N: PhysicsScalar>(v: &Vector3<N>) -> (usize, &N) {
+pub(crate) fn min_component<N: PhysicsScalar>(v: &Vector3<N>) -> (usize, &N) {
     v.iter()
         .enumerate()
         .min_by(|(_, &f1), (_, &f2)| n_ordering(f1, f2))
         .unwrap()
 }
 
-#[inline(always)]
-pub fn max_component<N: PhysicsScalar>(v: &Vector3<N>) -> (usize, &N) {
-    v.iter()
-        .enumerate()
-        .max_by(|(_, &f1), (_, &f2)| n_ordering(f1, f2))
-        .unwrap()
-}
+// #[inline(always)]
+// pub(crate) fn max_component<N: PhysicsScalar>(v: &Vector3<N>) -> (usize, &N) {
+//     v.iter()
+//         .enumerate()
+//         .max_by(|(_, &f1), (_, &f2)| n_ordering(f1, f2))
+//         .unwrap()
+// }
 
 #[inline(always)]
-pub fn closest_to_segment<N: PhysicsScalar>(
+pub(crate) fn closest_to_segment<N: PhysicsScalar>(
     start: &Vector3<N>,
     end: &Vector3<N>,
     point: &Vector3<N>,

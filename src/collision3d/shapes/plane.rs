@@ -31,14 +31,14 @@ impl<N: PhysicsScalar> Plane<N> {
         self.normal.dot(point) + self.d
     }
     pub fn random_point(&self) -> Vector3<N> {
-        if !is_zero(get_x(&self.normal)) {
-            return Vector3::new(-self.d / get_x(&self.normal), N::zero(), N::zero());
+        if !is_zero(self.normal.x) {
+            return Vector3::new(-self.d / self.normal.x, N::zero(), N::zero());
         }
-        if !is_zero(get_y(&self.normal)) {
-            return Vector3::new(N::zero(), -self.d / get_y(&self.normal), N::zero());
+        if !is_zero(self.normal.y) {
+            return Vector3::new(N::zero(), -self.d / self.normal.y, N::zero());
         }
-        if !is_zero(get_z(&self.normal)) {
-            return Vector3::new(N::zero(), N::zero(), -self.d / get_z(&self.normal));
+        if !is_zero(self.normal.z) {
+            return Vector3::new(N::zero(), N::zero(), -self.d / self.normal.z);
         }
         panic!("Failed to find random point on plane");
     }

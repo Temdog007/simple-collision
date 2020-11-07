@@ -59,14 +59,14 @@ impl<N: PhysicsScalar> Add for AxisAlignedBoundingBox<N> {
         let (min_vec2, max_vec2) = rhs.min_max();
         AxisAlignedBoundingBox {
             start: Vector3::new(
-                n_min(get_x(&min_vec1), get_x(&max_vec1)),
-                n_min(get_y(&min_vec1), get_y(&max_vec1)),
-                n_min(get_z(&min_vec1), get_z(&max_vec1)),
+                n_min(min_vec1.x, max_vec1.x),
+                n_min(min_vec1.y, max_vec1.y),
+                n_min(min_vec1.z, max_vec1.z),
             ),
             end: Vector3::new(
-                n_max(get_x(&min_vec2), get_x(&max_vec2)),
-                n_max(get_y(&min_vec2), get_y(&max_vec2)),
-                n_max(get_z(&min_vec2), get_z(&max_vec2)),
+                n_max(min_vec2.x, max_vec2.x),
+                n_max(min_vec2.y, max_vec2.y),
+                n_max(min_vec2.z, max_vec2.z),
             ),
         }
     }
@@ -108,23 +108,23 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
     }
     pub fn min_max(&self) -> (Vector3<N>, Vector3<N>) {
         let min_vec = Vector3::new(
-            n_min(get_x(&self.start), get_x(&self.end)),
-            n_min(get_y(&self.start), get_y(&self.end)),
-            n_min(get_z(&self.start), get_z(&self.end)),
+            n_min(self.start.x, self.end.x),
+            n_min(self.start.y, self.end.y),
+            n_min(self.start.z, self.end.z),
         );
         let max_vec = Vector3::new(
-            n_max(get_x(&self.start), get_x(&self.end)),
-            n_max(get_y(&self.start), get_y(&self.end)),
-            n_max(get_z(&self.start), get_z(&self.end)),
+            n_max(self.start.x, self.end.x),
+            n_max(self.start.y, self.end.y),
+            n_max(self.start.z, self.end.z),
         );
         (min_vec, max_vec)
     }
     pub fn closest_point(&self, point: &Vector3<N>) -> Vector3<N> {
         let (min_vec, max_vec) = self.min_max();
         Vector3::new(
-            clamp(get_x(point), get_x(&min_vec), get_x(&max_vec)),
-            clamp(get_y(point), get_y(&min_vec), get_y(&max_vec)),
-            clamp(get_z(point), get_z(&min_vec), get_z(&max_vec)),
+            clamp(point.x, min_vec.x, max_vec.x),
+            clamp(point.y, min_vec.y, max_vec.y),
+            clamp(point.z, min_vec.z, max_vec.z),
         )
     }
     pub fn largest_dim(&self) -> (usize, N) {
@@ -149,40 +149,27 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
     ) -> Option<CollisionResolution<N>> {
         let n = self.center() - aabb.center();
         let overlap = Vector3::new(
-            self.half_width() + aabb.half_width() - Float::abs(get_x(&n)),
-            self.half_height() + aabb.half_height() - Float::abs(get_y(&n)),
-            self.half_depth() + aabb.half_depth() - Float::abs(get_z(&n)),
+            self.half_width() + aabb.half_width() - Float::abs(n.x),
+            self.half_height() + aabb.half_height() - Float::abs(n.y),
+            self.half_depth() + aabb.half_depth() - Float::abs(n.z),
         );
-        if get_x(&overlap) > N::zero() && get_y(&overlap) > N::zero() && get_z(&overlap) > N::zero()
-        {
+        if overlap.x > N::zero() && overlap.y > N::zero() && overlap.z > N::zero() {
             let (index, &penetration) = min_component(&overlap);
             let normal = match index {
                 0 => Some(Vector3::new(
-                    if get_x(&n) < N::zero() {
-                        -N::one()
-                    } else {
-                        N::one()
-                    },
+                    if n.x < N::zero() { -N::one() } else { N::one() },
                     N::zero(),
                     N::zero(),
                 )),
                 1 => Some(Vector3::new(
                     N::zero(),
-                    if get_y(&n) < N::zero() {
-                        -N::one()
-                    } else {
-                        N::one()
-                    },
+                    if n.y < N::zero() { -N::one() } else { N::one() },
                     N::zero(),
                 )),
                 2 => Some(Vector3::new(
                     N::zero(),
                     N::zero(),
-                    if get_z(&n) < N::zero() {
-                        -N::one()
-                    } else {
-                        N::one()
-                    },
+                    if n.z < N::zero() { -N::one() } else { N::one() },
                 )),
                 _ => None,
             };
@@ -196,49 +183,37 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
         let n = self.center() - sphere.center();
         let extent = Vector3::new(self.half_width(), self.half_height(), self.half_depth());
         let mut closest = Vector3::new(
-            clamp(get_x(&n), -get_x(&extent), get_x(&extent)),
-            clamp(get_y(&n), -get_y(&extent), get_y(&extent)),
-            clamp(get_z(&n), -get_z(&extent), get_z(&extent)),
+            clamp(n.x, -extent.x, extent.x),
+            clamp(n.y, -extent.y, extent.y),
+            clamp(n.z, -extent.z, extent.z),
         );
         let inside = {
             if n == closest {
                 let (index, _) = min_component(&n.abs());
                 match index {
                     0 => {
-                        let value = get_x(&closest);
-                        set_x(
-                            &mut closest,
-                            get_x(&extent)
-                                * if value > N::zero() {
-                                    N::one()
-                                } else {
-                                    -N::one()
-                                },
-                        )
+                        closest.x = extent.x
+                            * if closest.x > N::zero() {
+                                N::one()
+                            } else {
+                                -N::one()
+                            };
                     }
                     1 => {
-                        let value = get_y(&closest);
-                        set_y(
-                            &mut closest,
-                            get_y(&extent)
-                                * if value > N::zero() {
-                                    N::one()
-                                } else {
-                                    -N::one()
-                                },
-                        )
+                        closest.y = extent.y
+                            * if closest.y > N::zero() {
+                                N::one()
+                            } else {
+                                -N::one()
+                            };
                     }
                     2 => {
-                        let value = get_z(&closest);
-                        set_z(
-                            &mut closest,
-                            get_z(&extent)
-                                * if value > N::zero() {
-                                    N::one()
-                                } else {
-                                    -N::one()
-                                },
-                        )
+                        closest.z = extent.z
+                            * if closest.z > N::zero() {
+                                N::one()
+                            } else {
+                                -N::one()
+                            };
                     }
                     _ => (),
                 }
@@ -346,9 +321,8 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
         }
     }
     pub fn corners(&self) -> [Vector3<N>; 8] {
-        let (start_x, start_y, start_z) =
-            (get_x(&self.start), get_y(&self.start), get_z(&self.start));
-        let (end_x, end_y, end_z) = (get_x(&self.end), get_y(&self.end), get_z(&self.end));
+        let (start_x, start_y, start_z) = (self.start.x, self.start.y, self.start.z);
+        let (end_x, end_y, end_z) = (self.end.x, self.end.y, self.end.z);
         [
             Vector3::new(start_x, start_y, start_z),
             Vector3::new(start_x, start_y, end_z),
