@@ -4,6 +4,7 @@ use nalgebra::*;
 use arrayvec::*;
 use std::cmp::*;
 use std::iter::FromIterator;
+use std::iter::Sum;
 use std::ops::*;
 
 #[cfg(feature = "serde-serialize")]
@@ -406,5 +407,63 @@ impl<N: PhysicsScalar> Shape3D<N> for AxisAlignedBoundingBox<N> {
         let offset = Vector3::new(self.half_width(), self.half_height(), self.half_depth());
         self.start = point - offset;
         self.end = point + offset;
+    }
+}
+
+impl<N: PhysicsScalar> Sum for AxisAlignedBoundingBox<N> {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        let mut aabb = AABB {
+            start: Vector3::<N>::zeros(),
+            end: Vector3::<N>::zeros(),
+        };
+        for a in iter.into_iter() {
+            aabb += a;
+        }
+        aabb
+    }
+}
+
+impl<'a, N: PhysicsScalar> Sum<&'a Self> for AxisAlignedBoundingBox<N> {
+    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
+        let mut aabb = AABB {
+            start: Vector3::<N>::zeros(),
+            end: Vector3::<N>::zeros(),
+        };
+        for a in iter.into_iter() {
+            aabb += *a;
+        }
+        aabb
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sum_test() {
+        let aabb: AxisAlignedBoundingBox<f32> = [
+            AxisAlignedBoundingBox {
+                start: Vector3::<f32>::new(-10f32, -1f32, 500f32),
+                end: Vector3::<f32>::new(-560f32, 25f32, 120f32),
+            },
+            AxisAlignedBoundingBox {
+                start: Vector3::<f32>::new(10f32, 505f32, -159f32),
+                end: Vector3::<f32>::new(258f32, 480f32, -285f32),
+            },
+        ]
+        .iter()
+        .sum();
+
+        aabb.start.relative_eq(
+            &Vector3::<f32>::new(-560f32, -1f32, -285f32),
+            std::f32::EPSILON,
+            std::f32::EPSILON,
+        );
+        aabb.end.relative_eq(
+            &Vector3::<f32>::new(258f32, 505f32, 500f32),
+            std::f32::EPSILON,
+            std::f32::EPSILON,
+        );
     }
 }
