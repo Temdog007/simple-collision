@@ -12,6 +12,7 @@ pub struct Triangle<N: PhysicsScalar> {
     pub point3: Vector3<N>,
 }
 
+
 impl<N: PhysicsScalar> Triangle<N> {
     pub fn x_width(&self) -> N {
         let arr = [self.point1.x, self.point2.x, self.point3.x];

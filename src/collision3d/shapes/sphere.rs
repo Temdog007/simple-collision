@@ -6,12 +6,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
-pub struct Sphere<N : PhysicsScalar> {
+pub struct Sphere<N: PhysicsScalar> {
     pub center: Vector3<N>,
     pub radius: N,
 }
 
-impl<N : PhysicsScalar> Sphere<N> {
+impl<N: PhysicsScalar> Sphere<N> {
     pub fn new(center: &Vector3<N>, radius: N) -> Self {
         Sphere {
             center: *center,
@@ -59,6 +59,14 @@ impl<N : PhysicsScalar> Sphere<N> {
 
         let point = self.center - normal * dist;
         if triangle.contains(&point) {
+            return Some(CollisionResolution {
+                normal,
+                penetration: self.radius - dist,
+            });
+        }
+
+        let (_, distance) = triangle.closest_point(&self.center);
+        if distance < self.radius {
             Some(CollisionResolution {
                 normal,
                 penetration: self.radius - dist,
@@ -69,7 +77,7 @@ impl<N : PhysicsScalar> Sphere<N> {
     }
 }
 
-impl<N : PhysicsScalar> Shape3D<N> for Sphere<N> {
+impl<N: PhysicsScalar> Shape3D<N> for Sphere<N> {
     fn bounding_aabb(&self) -> AxisAlignedBoundingBox<N> {
         AxisAlignedBoundingBox {
             start: self.center() - Vector3::from_element(self.radius),
