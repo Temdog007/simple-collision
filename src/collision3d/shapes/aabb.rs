@@ -156,28 +156,28 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
         if overlap.x > N::zero() && overlap.y > N::zero() && overlap.z > N::zero() {
             let (index, &penetration) = min_component(&overlap);
             let normal = match index {
-                0 => Some(Vector3::new(
+                0 => Vector3::new(
                     if n.x < N::zero() { -N::one() } else { N::one() },
                     N::zero(),
                     N::zero(),
-                )),
-                1 => Some(Vector3::new(
+                ),
+                1 => Vector3::new(
                     N::zero(),
                     if n.y < N::zero() { -N::one() } else { N::one() },
                     N::zero(),
-                )),
-                2 => Some(Vector3::new(
+                ),
+                2 => Vector3::new(
                     N::zero(),
                     N::zero(),
                     if n.z < N::zero() { -N::one() } else { N::one() },
-                )),
-                _ => None,
+                ),
+                _ => panic!("Unexpected min component")
             };
-            if let Some(normal) = normal {
-                return Some(CollisionResolution::new(&normal, penetration));
-            }
+            Some(CollisionResolution::new(&normal, penetration))
         }
-        None
+        else{
+            None
+        }
     }
     pub fn get_sphere_collision(&self, sphere: &Sphere<N>) -> Option<CollisionResolution<N>> {
         let n = self.center() - sphere.center();
