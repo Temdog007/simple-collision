@@ -55,18 +55,17 @@ impl<N: PhysicsScalar> Add for AxisAlignedBoundingBox<N> {
     type Output = AxisAlignedBoundingBox<N>;
 
     fn add(self, rhs: AxisAlignedBoundingBox<N>) -> Self::Output {
-        let (min_vec1, max_vec1) = self.min_max();
-        let (min_vec2, max_vec2) = rhs.min_max();
+        let arr = [self.start, self.end, rhs.start, rhs.end];
         AxisAlignedBoundingBox {
             start: Vector3::new(
-                n_min(min_vec1.x, max_vec1.x),
-                n_min(min_vec1.y, max_vec1.y),
-                n_min(min_vec1.z, max_vec1.z),
+                n_min_iter(arr.iter(), 0),
+                n_min_iter(arr.iter(), 1),
+                n_min_iter(arr.iter(), 2),
             ),
             end: Vector3::new(
-                n_max(min_vec2.x, max_vec2.x),
-                n_max(min_vec2.y, max_vec2.y),
-                n_max(min_vec2.z, max_vec2.z),
+                n_max_iter(arr.iter(), 0),
+                n_max_iter(arr.iter(), 1),
+                n_max_iter(arr.iter(), 2),
             ),
         }
     }
@@ -171,11 +170,10 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
                     N::zero(),
                     if n.z < N::zero() { -N::one() } else { N::one() },
                 ),
-                _ => panic!("Unexpected min component")
+                _ => panic!("Unexpected min component"),
             };
             Some(CollisionResolution::new(&normal, penetration))
-        }
-        else{
+        } else {
             None
         }
     }

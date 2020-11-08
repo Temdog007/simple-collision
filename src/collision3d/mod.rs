@@ -54,6 +54,44 @@ pub(crate) fn n_max<N: PhysicsScalar>(a: N, b: N) -> N {
 }
 
 #[inline(always)]
+pub(crate) fn n_min_iter<
+    'a,
+    I: Iterator<Item = &'a Vector3<N>>,
+    N: PhysicsScalar + Copy + PartialOrd,
+>(
+    iter: I,
+    index: usize,
+) -> N {
+    iter.min_by(|a, b| unsafe {
+        match a.get_unchecked(index).partial_cmp(&b.get_unchecked(index)) {
+            Some(ord) => ord,
+            None => std::cmp::Ordering::Equal,
+        }
+    })
+    .map(|v| unsafe { *v.get_unchecked(index) })
+    .unwrap()
+}
+
+#[inline(always)]
+pub(crate) fn n_max_iter<
+    'a,
+    I: Iterator<Item = &'a Vector3<N>>,
+    N: PhysicsScalar + Copy + PartialOrd,
+>(
+    iter: I,
+    index: usize,
+) -> N {
+    iter.max_by(|a, b| unsafe {
+        match a.get_unchecked(index).partial_cmp(&b.get_unchecked(index)) {
+            Some(ord) => ord,
+            None => std::cmp::Ordering::Equal,
+        }
+    })
+    .map(|v| unsafe { *v.get_unchecked(index) })
+    .unwrap()
+}
+
+#[inline(always)]
 pub(crate) fn is_zero<N: PhysicsScalar>(a: N) -> bool {
     Float::abs(a) < N::epsilon()
 }
