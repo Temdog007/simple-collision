@@ -1,5 +1,6 @@
 use super::*;
 use nalgebra::*;
+use num_traits::Float;
 
 #[cfg(feature = "serde-serialize")]
 use serde::{Deserialize, Serialize};
@@ -50,11 +51,21 @@ impl<N: PhysicsScalar> Sphere<N> {
             })
         }
     }
-    pub fn get_triangle_collision(&self, triangle: &Triangle<N>) -> Option<CollisionResolution<N>> {
+    pub fn get_triangle_collision(
+        &self,
+        triangle: &Triangle<N>,
+        double_sided: bool,
+    ) -> Option<CollisionResolution<N>> {
         let normal = triangle.normal();
         let dist = (self.center - triangle.point1).dot(&normal);
-        if dist < N::zero() || dist > self.radius {
-            return None;
+        if double_sided {
+            if Float::abs(dist) > self.radius {
+                return None;
+            }
+        } else {
+            if dist < N::zero() || dist > self.radius {
+                return None;
+            }
         }
 
         let point = self.center - normal * dist;
