@@ -86,6 +86,19 @@ impl<N: PhysicsScalar> Capsule<N> {
             .get_triangle_collision(triangle, double_sided)
         })
     }
+    pub fn get_plane_collision(&self, plane : &Plane<N>) -> Option<CollisionResolution<N>>{
+        let ray = Ray::from(self);
+        match ray.intersects_plane(plane){
+            Some(t) if N::zero() < t && t< self.distance() =>{
+                let center = ray.get_point(t);
+                Sphere{
+                    center,
+                    radius : self.radius
+                }.get_plane_collision(plane)
+            }
+            _ => None
+        }
+    }
     pub fn to_spheres(&self) -> (Sphere<N>, Sphere<N>) {
         let radius = self.radius;
         (
