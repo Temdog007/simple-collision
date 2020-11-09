@@ -22,4 +22,10 @@ impl<N : PhysicsScalar> CollisionResolution<N> {
     pub fn total_force(&self) -> Vector3<N> {
         self.normal * self.penetration
     }
+    pub fn flip(&self) -> CollisionResolution<N>{
+        CollisionResolution{
+            normal : self.normal * -N::one(),
+            penetration : self.penetration
+        }
+    }
 }
