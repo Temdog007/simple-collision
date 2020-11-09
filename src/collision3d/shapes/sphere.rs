@@ -86,6 +86,12 @@ impl<N: PhysicsScalar> Sphere<N> {
             None
         }
     }
+    pub fn get_capsule_collision(&self, capsule : &Capsule<N>) -> Option<CollisionResolution<N>>{
+        let center = capsule.closest_point(&self.center);
+        self.get_sphere_collision(&Sphere{
+            center, radius : capsule.radius
+        })
+    }
 }
 
 impl<N: PhysicsScalar> Shape3D<N> for Sphere<N> {

@@ -10,6 +10,12 @@ pub use plane::*;
 pub mod triangle;
 pub use triangle::*;
 
+pub mod capsule;
+pub use capsule::*;
+
+pub mod ray;
+pub use ray::*;
+
 use nalgebra::*;
 
 use super::*;

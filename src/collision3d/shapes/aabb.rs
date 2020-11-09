@@ -318,6 +318,12 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
             None => None,
         }
     }
+    pub fn get_capsule_collision(&self, capsule : &Capsule<N>) -> Option<CollisionResolution<N>>{
+        let center = capsule.closest_point(&self.center());
+        self.get_sphere_collision(&Sphere{
+            center, radius : capsule.radius
+        })
+    }
     pub fn corners(&self) -> [Vector3<N>; 8] {
         let (start_x, start_y, start_z) = (self.start.x, self.start.y, self.start.z);
         let (end_x, end_y, end_z) = (self.end.x, self.end.y, self.end.z);
