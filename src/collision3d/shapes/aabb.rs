@@ -77,6 +77,23 @@ impl<N: PhysicsScalar> AddAssign for AxisAlignedBoundingBox<N> {
     }
 }
 
+impl<N: PhysicsScalar> Mul<N> for AxisAlignedBoundingBox<N> {
+    type Output = Self;
+    fn mul(self, rhs: N) -> Self::Output {
+        AxisAlignedBoundingBox {
+            start: self.start * rhs,
+            end: self.end * rhs,
+        }
+    }
+}
+
+impl<N: PhysicsScalar> MulAssign<N> for AxisAlignedBoundingBox<N> {
+    fn mul_assign(&mut self, rhs: N) {
+        self.start *= rhs;
+        self.end *= rhs;
+    }
+}
+
 impl<N: PhysicsScalar> From<AxisAlignedBoundingBox<N>> for Matrix4<N> {
     fn from(aabb: AxisAlignedBoundingBox<N>) -> Matrix4<N> {
         let mut m = Matrix4::identity();
@@ -318,10 +335,11 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
             None => None,
         }
     }
-    pub fn get_capsule_collision(&self, capsule : &Capsule<N>) -> Option<CollisionResolution<N>>{
+    pub fn get_capsule_collision(&self, capsule: &Capsule<N>) -> Option<CollisionResolution<N>> {
         let center = capsule.closest_point(&self.center());
-        self.get_sphere_collision(&Sphere{
-            center, radius : capsule.radius
+        self.get_sphere_collision(&Sphere {
+            center,
+            radius: capsule.radius,
         })
     }
     pub fn corners(&self) -> [Vector3<N>; 8] {
@@ -456,5 +474,16 @@ mod tests {
 
         assert_eq!(aabb.largest_dim(), (1, 90f32));
         assert_eq!(aabb.smallest_dim(), (0, 50f32));
+    }
+    #[test]
+    fn mul_test() {
+        let start = Vector3::<f32>::new(1f32, 2f32, 5f32);
+        let end = Vector3::<f32>::new(0f32, 10f32, -2f32);
+
+        let aabb = AABB{start,end};
+        let aabb2 = aabb * 0.5f32;
+
+        assert_eq!(aabb2.start, start * 0.5f32);
+        assert_eq!(aabb2.end, end * 0.5f32);
     }
 }
