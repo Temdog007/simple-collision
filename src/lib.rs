@@ -171,3 +171,13 @@ pub enum Axis {
     Y,
     Z,
 }
+
+impl Axis {
+    pub fn to_num(self) -> usize{
+        match self {
+            Axis::X => 0,
+            Axis::Y => 1,
+            Axis::Z => 2
+        }
+    }
+}

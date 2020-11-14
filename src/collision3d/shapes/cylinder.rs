@@ -75,24 +75,9 @@ impl<N: FloatingPhysicsScalar> Cylinder<N> {
             })
         }
     }
-    pub fn get_sphere_collision(
-        &self,
-        sphere: &Sphere<N>,
+    fn get_collision(
+        collisions: &[Option<CollisionResolution<Vector2<N>, N>>],
     ) -> Option<CollisionResolution<Vector3<N>, N>> {
-        let axes = [(Axis::X, Axis::Y), (Axis::Z, Axis::Y), (Axis::X, Axis::Z)];
-
-        let mut collisions = [None; 3];
-
-        for (index, (horizontal, vertical)) in axes.iter().enumerate() {
-            unsafe {
-                *collisions.get_unchecked_mut(index) = self
-                    .get_shape(*horizontal, *vertical)
-                    .get_collision(&CylinderShape::Circle(
-                        sphere.to_circle(*horizontal, *vertical),
-                    ));
-            }
-        }
-
         if collisions.iter().any(|c| c.is_none()) {
             None
         } else {
@@ -124,6 +109,44 @@ impl<N: FloatingPhysicsScalar> Cylinder<N> {
             };
             Some(rval)
         }
+    }
+    pub fn get_sphere_collision(
+        &self,
+        sphere: &Sphere<N>,
+    ) -> Option<CollisionResolution<Vector3<N>, N>> {
+        let axes = [(Axis::X, Axis::Y), (Axis::Z, Axis::Y), (Axis::X, Axis::Z)];
+
+        let mut collisions = [None; 3];
+
+        for (index, (horizontal, vertical)) in axes.iter().enumerate() {
+            unsafe {
+                *collisions.get_unchecked_mut(index) = self
+                    .get_shape(*horizontal, *vertical)
+                    .get_collision(&CylinderShape::Circle(
+                        sphere.to_circle(*horizontal, *vertical),
+                    ));
+            }
+        }
+
+        Self::get_collision(&collisions)
+    }
+    pub fn get_aabb_collision(
+        &self,
+        aabb: &AABB3D<N>,
+    ) -> Option<CollisionResolution<Vector3<N>, N>> {
+        let axes = [(Axis::X, Axis::Y), (Axis::Z, Axis::Y), (Axis::X, Axis::Z)];
+
+        let mut collisions = [None; 3];
+
+        for (index, (horizontal, vertical)) in axes.iter().enumerate() {
+            unsafe {
+                *collisions.get_unchecked_mut(index) = self
+                    .get_shape(*horizontal, *vertical)
+                    .get_collision(&CylinderShape::AABB(aabb.to_2d(*horizontal, *vertical)));
+            }
+        }
+
+        Self::get_collision(&collisions)
     }
 }
 

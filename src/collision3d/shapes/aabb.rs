@@ -1,6 +1,7 @@
 use super::*;
 use nalgebra::*;
 
+use crate::collision2d::AABB2D;
 use arrayvec::*;
 use std::cmp::*;
 use std::iter::FromIterator;
@@ -374,6 +375,24 @@ impl<N: FloatingPhysicsScalar> AxisAlignedBoundingBox<N> {
     }
     pub fn iter(&self) -> impl Iterator<Item = N> + '_ {
         self.start.iter().chain(self.end.iter()).cloned()
+    }
+    pub fn to_2d(&self, horizontal: Axis, vertical: Axis) -> AABB2D<N> {
+        debug_assert_ne!(horizontal, vertical);
+        let start_index = horizontal.to_num();
+        let end_index = vertical.to_num();
+        let (start, end) = unsafe {
+            (
+                Vector2::new(
+                    *self.start.get_unchecked(start_index),
+                    *self.start.get_unchecked(end_index),
+                ),
+                Vector2::new(
+                    *self.end.get_unchecked(start_index),
+                    *self.end.get_unchecked(end_index),
+                ),
+            )
+        };
+        AABB2D { start, end }
     }
 }
 
