@@ -162,6 +162,8 @@ pub(crate) fn closest_to_segment<N: PhysicsScalar>(
     start + ab * n_min(n_max(t, N::zero()), N::one())
 }
 
+#[cfg(feature = "serde-serialize")]
+use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 pub enum Axis {
