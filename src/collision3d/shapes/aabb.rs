@@ -17,7 +17,7 @@ pub struct AxisAlignedBoundingBox<N: PhysicsScalar> {
     pub end: Vector3<N>,
 }
 
-pub type AABB<N> = AxisAlignedBoundingBox<N>;
+pub type AABB3D<N> = AxisAlignedBoundingBox<N>;
 
 impl<N: FloatingPhysicsScalar> FromIterator<Vector3<N>> for AxisAlignedBoundingBox<N> {
     fn from_iter<T: IntoIterator<Item = Vector3<N>>>(iter: T) -> Self {
@@ -427,7 +427,7 @@ impl<N: FloatingPhysicsScalar> Shape3D<N> for AxisAlignedBoundingBox<N> {
 
 impl<N: FloatingPhysicsScalar> Sum for AxisAlignedBoundingBox<N> {
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        let mut aabb = AABB {
+        let mut aabb = AABB3D {
             start: Vector3::<N>::zeros(),
             end: Vector3::<N>::zeros(),
         };
@@ -440,7 +440,7 @@ impl<N: FloatingPhysicsScalar> Sum for AxisAlignedBoundingBox<N> {
 
 impl<'a, N: FloatingPhysicsScalar> Sum<&'a Self> for AxisAlignedBoundingBox<N> {
     fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
-        let mut aabb = AABB {
+        let mut aabb = AABB3D {
             start: Vector3::<N>::zeros(),
             end: Vector3::<N>::zeros(),
         };
@@ -496,7 +496,7 @@ mod tests {
         let start = Vector3::<f32>::new(1f32, 2f32, 5f32);
         let end = Vector3::<f32>::new(0f32, 10f32, -2f32);
 
-        let aabb = AABB { start, end };
+        let aabb = AABB3D { start, end };
         let aabb2 = aabb * 0.5f32;
 
         assert_eq!(aabb2.start, start * 0.5f32);

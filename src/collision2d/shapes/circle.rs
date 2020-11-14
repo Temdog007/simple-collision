@@ -15,10 +15,10 @@ pub struct Circle<N: PhysicsScalar> {
 impl<N: FloatingPhysicsScalar> Circle<N> {
     pub fn get_circle_collision(
         &self,
-        sphere: &Circle<N>,
+        circle: &Circle<N>,
     ) -> Option<CollisionResolution<Vector2<N>, N>> {
-        let n = self.center - sphere.center;
-        let r = (self.radius + sphere.radius).pow(N::from_usize(2).unwrap());
+        let n = self.center - circle.center;
+        let r = (self.radius + circle.radius).pow(N::from_usize(2).unwrap());
 
         let len = n.magnitude_squared();
         if len > r {

@@ -16,6 +16,9 @@ pub use capsule::*;
 pub mod ray;
 pub use ray::*;
 
+pub mod cylinder;
+pub use cylinder::*;
+
 use super::*;
 
 pub trait Shape3D<N : PhysicsScalar> {

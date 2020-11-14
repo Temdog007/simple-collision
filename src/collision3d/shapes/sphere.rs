@@ -1,4 +1,5 @@
 use super::*;
+use crate::collision2d::shapes::Circle;
 use nalgebra::*;
 use num_traits::Float;
 
@@ -13,7 +14,10 @@ pub struct Sphere<N: PhysicsScalar> {
 }
 
 impl<N: FloatingPhysicsScalar> Sphere<N> {
-    pub fn get_sphere_collision(&self, sphere: &Sphere<N>) -> Option<CollisionResolution<Vector3<N>,N>> {
+    pub fn get_sphere_collision(
+        &self,
+        sphere: &Sphere<N>,
+    ) -> Option<CollisionResolution<Vector3<N>, N>> {
         let n = self.center - sphere.center;
         let r = (self.radius + sphere.radius).pow(N::from_usize(2).unwrap());
 
@@ -34,7 +38,10 @@ impl<N: FloatingPhysicsScalar> Sphere<N> {
             penetration,
         })
     }
-    pub fn get_plane_collision(&self, plane: &Plane<N>) -> Option<CollisionResolution<Vector3<N>,N>> {
+    pub fn get_plane_collision(
+        &self,
+        plane: &Plane<N>,
+    ) -> Option<CollisionResolution<Vector3<N>, N>> {
         let dist = plane.distance(&self.center);
         if dist < N::zero() || dist > self.radius {
             None
@@ -49,7 +56,7 @@ impl<N: FloatingPhysicsScalar> Sphere<N> {
         &self,
         triangle: &Triangle<N>,
         double_sided: bool,
-    ) -> Option<CollisionResolution<Vector3<N>,N>> {
+    ) -> Option<CollisionResolution<Vector3<N>, N>> {
         let normal = triangle.normal();
         let dist = (self.center - triangle.point1).dot(&normal);
         if double_sided {
@@ -80,11 +87,32 @@ impl<N: FloatingPhysicsScalar> Sphere<N> {
             None
         }
     }
-    pub fn get_capsule_collision(&self, capsule : &Capsule<N>) -> Option<CollisionResolution<Vector3<N>,N>>{
+    pub fn get_capsule_collision(
+        &self,
+        capsule: &Capsule<N>,
+    ) -> Option<CollisionResolution<Vector3<N>, N>> {
         let center = capsule.closest_point(&self.center);
-        self.get_sphere_collision(&Sphere{
-            center, radius : capsule.radius
+        self.get_sphere_collision(&Sphere {
+            center,
+            radius: capsule.radius,
         })
+    }
+    pub fn to_circle(&self, horizontal: Axis, vertical: Axis) -> Circle<N> {
+        debug_assert_ne!(horizontal, vertical);
+        let x = match horizontal {
+            Axis::X => self.center.x,
+            Axis::Y => self.center.y,
+            Axis::Z => self.center.z,
+        };
+        let y = match vertical {
+            Axis::X => self.center.x,
+            Axis::Y => self.center.y,
+            Axis::Z => self.center.z,
+        };
+        Circle {
+            center: Vector2::new(x, y),
+            radius: self.radius,
+        }
     }
 }
 

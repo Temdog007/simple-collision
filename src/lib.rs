@@ -22,7 +22,8 @@ pub trait PhysicsScalar:
     + Copy
     + PartialEq
     + PartialOrd
-    + Bounded + Signed
+    + Bounded
+    + Signed
 {
 }
 
@@ -159,4 +160,12 @@ pub(crate) fn closest_to_segment<N: PhysicsScalar>(
     let ab: Vector3<N> = end - start;
     let t: N = (point - start).dot(&ab) / ab.dot(&ab);
     start + ab * n_min(n_max(t, N::zero()), N::one())
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
+pub enum Axis {
+    X,
+    Y,
+    Z,
 }
