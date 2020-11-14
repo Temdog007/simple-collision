@@ -16,6 +16,28 @@ pub struct Cylinder<N: PhysicsScalar> {
 }
 
 impl<N: FloatingPhysicsScalar> Cylinder<N> {
+    pub fn from_aabb(aabb: &AABB3D<N>, axis: Axis) -> Self {
+        let (half_height, radius) = match axis {
+            Axis::X => (
+                aabb.half_width(),
+                RealField::max(aabb.half_height(), aabb.half_depth()),
+            ),
+            Axis::Y => (
+                aabb.half_height(),
+                RealField::max(aabb.half_width(), aabb.half_depth()),
+            ),
+            Axis::Z => (
+                aabb.half_depth(),
+                RealField::max(aabb.half_width(), aabb.half_height()),
+            ),
+        };
+        Self {
+            center: aabb.center(),
+            half_height,
+            radius,
+            axis,
+        }
+    }
     pub fn height(&self) -> N {
         self.half_height * N::from_f64(2.0).unwrap()
     }
