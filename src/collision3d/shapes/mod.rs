@@ -16,8 +16,6 @@ pub use capsule::*;
 pub mod ray;
 pub use ray::*;
 
-use nalgebra::*;
-
 use super::*;
 
 pub trait Shape3D<N : PhysicsScalar> {

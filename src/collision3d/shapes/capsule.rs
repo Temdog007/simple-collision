@@ -11,7 +11,7 @@ pub struct Capsule<N: PhysicsScalar> {
     pub radius: N,
 }
 
-impl<N: PhysicsScalar> Capsule<N> {
+impl<N: FloatingPhysicsScalar> Capsule<N> {
     pub fn distance(&self) -> N {
         (self.start - self.end).magnitude() + self.radius * N::from_f64(2f64).unwrap()
     }
@@ -26,7 +26,7 @@ impl<N: PhysicsScalar> Capsule<N> {
         let this_closest = self.closest_point(&other_closest);
         (this_closest, other_closest)
     }
-    pub fn get_capsule_collision(&self, capsule: &Capsule<N>) -> Option<CollisionResolution<N>> {
+    pub fn get_capsule_collision(&self, capsule: &Capsule<N>) -> Option<CollisionResolution<Vector3<N>, N>> {
         if self
             .bounding_aabb()
             .get_aabb_collision(&capsule.bounding_aabb())
@@ -50,7 +50,7 @@ impl<N: PhysicsScalar> Capsule<N> {
         &self,
         triangle: &Triangle<N>,
         double_sided: bool,
-    ) -> Option<CollisionResolution<N>> {
+    ) -> Option<CollisionResolution<Vector3<N>,N>> {
         if self
             .bounding_aabb()
             .get_aabb_collision(&triangle.bounding_aabb())
@@ -86,7 +86,7 @@ impl<N: PhysicsScalar> Capsule<N> {
             .get_triangle_collision(triangle, double_sided)
         })
     }
-    pub fn get_plane_collision(&self, plane: &Plane<N>) -> Option<CollisionResolution<N>> {
+    pub fn get_plane_collision(&self, plane: &Plane<N>) -> Option<CollisionResolution<Vector3<N>, N>> {
         let ray = Ray::from(self);
         match ray.intersects_plane(plane) {
             Some(t) if N::zero() < t && t < self.distance() => {
@@ -115,7 +115,7 @@ impl<N: PhysicsScalar> Capsule<N> {
     }
 }
 
-impl<N: PhysicsScalar> Shape3D<N> for Capsule<N> {
+impl<N: FloatingPhysicsScalar> Shape3D<N> for Capsule<N> {
     fn bounding_aabb(&self) -> AxisAlignedBoundingBox<N> {
         let (start, end) = self.to_spheres();
         start.bounding_aabb() + end.bounding_aabb()

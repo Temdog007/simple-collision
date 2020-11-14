@@ -19,7 +19,7 @@ pub struct AxisAlignedBoundingBox<N: PhysicsScalar> {
 
 pub type AABB<N> = AxisAlignedBoundingBox<N>;
 
-impl<N: PhysicsScalar> FromIterator<Vector3<N>> for AxisAlignedBoundingBox<N> {
+impl<N: FloatingPhysicsScalar> FromIterator<Vector3<N>> for AxisAlignedBoundingBox<N> {
     fn from_iter<T: IntoIterator<Item = Vector3<N>>>(iter: T) -> Self {
         let mut start = Vector3::from_element(Bounded::max_value());
         let mut end = Vector3::from_element(Bounded::min_value());
@@ -35,7 +35,7 @@ impl<N: PhysicsScalar> FromIterator<Vector3<N>> for AxisAlignedBoundingBox<N> {
     }
 }
 
-impl<'a, N: PhysicsScalar> FromIterator<&'a Vector3<N>> for AxisAlignedBoundingBox<N> {
+impl<'a, N: FloatingPhysicsScalar> FromIterator<&'a Vector3<N>> for AxisAlignedBoundingBox<N> {
     fn from_iter<T: IntoIterator<Item = &'a Vector3<N>>>(iter: T) -> Self {
         let mut start = Vector3::from_element(Bounded::max_value());
         let mut end = Vector3::from_element(Bounded::min_value());
@@ -51,7 +51,7 @@ impl<'a, N: PhysicsScalar> FromIterator<&'a Vector3<N>> for AxisAlignedBoundingB
     }
 }
 
-impl<N: PhysicsScalar> Add for AxisAlignedBoundingBox<N> {
+impl<N: FloatingPhysicsScalar> Add for AxisAlignedBoundingBox<N> {
     type Output = AxisAlignedBoundingBox<N>;
 
     fn add(self, rhs: AxisAlignedBoundingBox<N>) -> Self::Output {
@@ -71,13 +71,13 @@ impl<N: PhysicsScalar> Add for AxisAlignedBoundingBox<N> {
     }
 }
 
-impl<N: PhysicsScalar> AddAssign for AxisAlignedBoundingBox<N> {
+impl<N: FloatingPhysicsScalar> AddAssign for AxisAlignedBoundingBox<N> {
     fn add_assign(&mut self, rhs: AxisAlignedBoundingBox<N>) {
         *self = *self + rhs
     }
 }
 
-impl<N: PhysicsScalar> Mul<N> for AxisAlignedBoundingBox<N> {
+impl<N: FloatingPhysicsScalar> Mul<N> for AxisAlignedBoundingBox<N> {
     type Output = Self;
     fn mul(self, rhs: N) -> Self::Output {
         AxisAlignedBoundingBox {
@@ -87,14 +87,14 @@ impl<N: PhysicsScalar> Mul<N> for AxisAlignedBoundingBox<N> {
     }
 }
 
-impl<N: PhysicsScalar> MulAssign<N> for AxisAlignedBoundingBox<N> {
+impl<N: FloatingPhysicsScalar> MulAssign<N> for AxisAlignedBoundingBox<N> {
     fn mul_assign(&mut self, rhs: N) {
         self.start *= rhs;
         self.end *= rhs;
     }
 }
 
-impl<N: PhysicsScalar> From<AxisAlignedBoundingBox<N>> for Matrix4<N> {
+impl<N: FloatingPhysicsScalar> From<AxisAlignedBoundingBox<N>> for Matrix4<N> {
     fn from(aabb: AxisAlignedBoundingBox<N>) -> Matrix4<N> {
         let mut m = Matrix4::identity();
         m.append_nonuniform_scaling_mut(&Vector3::new(aabb.width(), aabb.height(), aabb.depth()));
@@ -103,24 +103,27 @@ impl<N: PhysicsScalar> From<AxisAlignedBoundingBox<N>> for Matrix4<N> {
     }
 }
 
-impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
+impl<N: FloatingPhysicsScalar + FromPrimitive> AxisAlignedBoundingBox<N> {
+    pub fn half_width(&self) -> N {
+        self.width() / N::from_i8(2).unwrap()
+    }
+    pub fn half_height(&self) -> N {
+        self.height() / N::from_i8(2).unwrap()
+    }
+    pub fn half_depth(&self) -> N {
+        self.depth() / N::from_i8(2).unwrap()
+    }
+}
+
+impl<N: FloatingPhysicsScalar> AxisAlignedBoundingBox<N> {
     pub fn width(&self) -> N {
         Float::abs(self.start.x - self.end.x)
-    }
-    pub fn half_width(&self) -> N {
-        self.width() * N::from_f64(0.5f64).unwrap()
     }
     pub fn height(&self) -> N {
         Float::abs(self.start.y - self.end.y)
     }
-    pub fn half_height(&self) -> N {
-        self.height() * N::from_f64(0.5f64).unwrap()
-    }
     pub fn depth(&self) -> N {
         Float::abs(self.start.z - self.end.z)
-    }
-    pub fn half_depth(&self) -> N {
-        self.depth() * N::from_f64(0.5f64).unwrap()
     }
     pub fn min_max(&self) -> (Vector3<N>, Vector3<N>) {
         let min_vec = Vector3::new(
@@ -162,7 +165,7 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
     pub fn get_aabb_collision(
         &self,
         aabb: &AxisAlignedBoundingBox<N>,
-    ) -> Option<CollisionResolution<N>> {
+    ) -> Option<CollisionResolution<Vector3<N>, N>> {
         let n = self.center() - aabb.center();
         let overlap = Vector3::new(
             self.half_width() + aabb.half_width() - Float::abs(n.x),
@@ -189,12 +192,18 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
                 ),
                 _ => panic!("Unexpected min component"),
             };
-            Some(CollisionResolution::new(&normal, penetration))
+            Some(CollisionResolution {
+                normal,
+                penetration,
+            })
         } else {
             None
         }
     }
-    pub fn get_sphere_collision(&self, sphere: &Sphere<N>) -> Option<CollisionResolution<N>> {
+    pub fn get_sphere_collision(
+        &self,
+        sphere: &Sphere<N>,
+    ) -> Option<CollisionResolution<Vector3<N>, N>> {
         let n = self.center() - sphere.center();
         let extent = Vector3::new(self.half_width(), self.half_height(), self.half_depth());
         let mut closest = Vector3::new(
@@ -278,12 +287,16 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
 
         Some(corners.iter().zip(distances.into_iter()).fold(init(), fold))
     }
-    pub fn get_plane_collision(&self, plane: &Plane<N>) -> Option<CollisionResolution<N>> {
+    pub fn get_plane_collision(
+        &self,
+        plane: &Plane<N>,
+    ) -> Option<CollisionResolution<Vector3<N>, N>> {
         let init = || CollisionResolution {
             normal: plane.normal,
             penetration: N::zero(),
         };
-        let fold = |mut result: CollisionResolution<N>, (corner, distance): (&Vector3<N>, N)| {
+        let fold = |mut result: CollisionResolution<Vector3<N>, N>,
+                    (corner, distance): (&Vector3<N>, N)| {
             let point = corner - plane.normal * distance;
             if (point - corner).dot(&plane.normal) > N::zero() {
                 result.penetration = n_max(result.penetration, Float::abs(distance));
@@ -302,7 +315,10 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
             None => None,
         }
     }
-    pub fn get_triangle_collision(&self, triangle: &Triangle<N>) -> Option<CollisionResolution<N>> {
+    pub fn get_triangle_collision(
+        &self,
+        triangle: &Triangle<N>,
+    ) -> Option<CollisionResolution<Vector3<N>, N>> {
         let plane = triangle.to_plane();
         let init = || {
             (
@@ -313,7 +329,7 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
                 false,
             )
         };
-        let fold = |(mut result, mut inside): (CollisionResolution<N>, bool),
+        let fold = |(mut result, mut inside): (CollisionResolution<Vector3<N>, N>, bool),
                     (corner, distance): (&Vector3<N>, N)| {
             let point = corner - plane.normal * distance;
             if triangle.contains(&point) {
@@ -335,7 +351,10 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
             None => None,
         }
     }
-    pub fn get_capsule_collision(&self, capsule: &Capsule<N>) -> Option<CollisionResolution<N>> {
+    pub fn get_capsule_collision(
+        &self,
+        capsule: &Capsule<N>,
+    ) -> Option<CollisionResolution<Vector3<N>, N>> {
         let center = capsule.closest_point(&self.center());
         self.get_sphere_collision(&Sphere {
             center,
@@ -361,7 +380,7 @@ impl<N: PhysicsScalar> AxisAlignedBoundingBox<N> {
     }
 }
 
-impl<N: PhysicsScalar> Shape3D<N> for AxisAlignedBoundingBox<N> {
+impl<N: FloatingPhysicsScalar> Shape3D<N> for AxisAlignedBoundingBox<N> {
     fn bounding_aabb(&self) -> AxisAlignedBoundingBox<N> {
         *self
     }
@@ -409,7 +428,7 @@ impl<N: PhysicsScalar> Shape3D<N> for AxisAlignedBoundingBox<N> {
     }
 }
 
-impl<N: PhysicsScalar> Sum for AxisAlignedBoundingBox<N> {
+impl<N: FloatingPhysicsScalar> Sum for AxisAlignedBoundingBox<N> {
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         let mut aabb = AABB {
             start: Vector3::<N>::zeros(),
@@ -422,7 +441,7 @@ impl<N: PhysicsScalar> Sum for AxisAlignedBoundingBox<N> {
     }
 }
 
-impl<'a, N: PhysicsScalar> Sum<&'a Self> for AxisAlignedBoundingBox<N> {
+impl<'a, N: FloatingPhysicsScalar> Sum<&'a Self> for AxisAlignedBoundingBox<N> {
     fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         let mut aabb = AABB {
             start: Vector3::<N>::zeros(),
@@ -480,7 +499,7 @@ mod tests {
         let start = Vector3::<f32>::new(1f32, 2f32, 5f32);
         let end = Vector3::<f32>::new(0f32, 10f32, -2f32);
 
-        let aabb = AABB{start,end};
+        let aabb = AABB { start, end };
         let aabb2 = aabb * 0.5f32;
 
         assert_eq!(aabb2.start, start * 0.5f32);

@@ -12,7 +12,7 @@ pub struct Plane<N: PhysicsScalar> {
     pub d: N,
 }
 
-impl<N: PhysicsScalar> From<&Triangle<N>> for Plane<N> {
+impl<N: FloatingPhysicsScalar> From<&Triangle<N>> for Plane<N> {
     fn from(triangle: &Triangle<N>) -> Self {
         let normal = triangle.normal();
         let d = -normal.dot(&triangle.point1);
@@ -20,7 +20,7 @@ impl<N: PhysicsScalar> From<&Triangle<N>> for Plane<N> {
     }
 }
 
-impl<N: PhysicsScalar> Plane<N> {
+impl<N: FloatingPhysicsScalar> Plane<N> {
     pub fn from_point(normal: &Vector3<N>, point: &Vector3<N>) -> Self {
         Plane {
             normal: *normal,
@@ -47,7 +47,7 @@ impl<N: PhysicsScalar> Plane<N> {
     }
 }
 
-impl<N: PhysicsScalar> Shape3D<N> for Plane<N> {
+impl<N: FloatingPhysicsScalar> Shape3D<N> for Plane<N> {
     fn bounding_aabb(&self) -> AxisAlignedBoundingBox<N> {
         AxisAlignedBoundingBox {
             start: Vector3::from_element(Bounded::min_value()),

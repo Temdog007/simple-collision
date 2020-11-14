@@ -13,7 +13,7 @@ pub struct Triangle<N: PhysicsScalar> {
 }
 
 
-impl<N: PhysicsScalar> Triangle<N> {
+impl<N: FloatingPhysicsScalar> Triangle<N> {
     pub fn x_width(&self) -> N {
         let arr = [self.point1.x, self.point2.x, self.point3.x];
         let min_value = arr.iter().min_by(|&a, &b| n_ordering(*a, *b)).unwrap();
@@ -121,7 +121,7 @@ impl<N: PhysicsScalar> Triangle<N> {
     }
 }
 
-impl<N: PhysicsScalar> Shape3D<N> for Triangle<N> {
+impl<N: FloatingPhysicsScalar> Shape3D<N> for Triangle<N> {
     fn bounding_aabb(&self) -> AxisAlignedBoundingBox<N> {
         AxisAlignedBoundingBox {
             start: Vector3::new(self.min_x(), self.min_y(), self.min_z()),

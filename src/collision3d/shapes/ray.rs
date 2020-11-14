@@ -5,7 +5,7 @@ pub struct Ray<N: PhysicsScalar> {
     direction: Vector3<N>,
 }
 
-impl<N: PhysicsScalar> Ray<N> {
+impl<N: FloatingPhysicsScalar> Ray<N> {
     pub fn get_point(&self, distance: N) -> Vector3<N> {
         self.point + self.direction * distance
     }
@@ -24,7 +24,7 @@ impl<N: PhysicsScalar> Ray<N> {
     }
 }
 
-impl<N: PhysicsScalar> From<&Capsule<N>> for Ray<N> {
+impl<N: FloatingPhysicsScalar> From<&Capsule<N>> for Ray<N> {
     fn from(capsule: &Capsule<N>) -> Self {
         let direction = capsule.direction();
         Ray {

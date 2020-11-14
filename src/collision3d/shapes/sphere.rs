@@ -12,14 +12,8 @@ pub struct Sphere<N: PhysicsScalar> {
     pub radius: N,
 }
 
-impl<N: PhysicsScalar> Sphere<N> {
-    pub fn new(center: &Vector3<N>, radius: N) -> Self {
-        Sphere {
-            center: *center,
-            radius,
-        }
-    }
-    pub fn get_sphere_collision(&self, sphere: &Sphere<N>) -> Option<CollisionResolution<N>> {
+impl<N: FloatingPhysicsScalar> Sphere<N> {
+    pub fn get_sphere_collision(&self, sphere: &Sphere<N>) -> Option<CollisionResolution<Vector3<N>,N>> {
         let n = self.center - sphere.center;
         let r = (self.radius + sphere.radius).pow(N::from_usize(2).unwrap());
 
@@ -40,7 +34,7 @@ impl<N: PhysicsScalar> Sphere<N> {
             penetration,
         })
     }
-    pub fn get_plane_collision(&self, plane: &Plane<N>) -> Option<CollisionResolution<N>> {
+    pub fn get_plane_collision(&self, plane: &Plane<N>) -> Option<CollisionResolution<Vector3<N>,N>> {
         let dist = plane.distance(&self.center);
         if dist < N::zero() || dist > self.radius {
             None
@@ -55,7 +49,7 @@ impl<N: PhysicsScalar> Sphere<N> {
         &self,
         triangle: &Triangle<N>,
         double_sided: bool,
-    ) -> Option<CollisionResolution<N>> {
+    ) -> Option<CollisionResolution<Vector3<N>,N>> {
         let normal = triangle.normal();
         let dist = (self.center - triangle.point1).dot(&normal);
         if double_sided {
@@ -86,7 +80,7 @@ impl<N: PhysicsScalar> Sphere<N> {
             None
         }
     }
-    pub fn get_capsule_collision(&self, capsule : &Capsule<N>) -> Option<CollisionResolution<N>>{
+    pub fn get_capsule_collision(&self, capsule : &Capsule<N>) -> Option<CollisionResolution<Vector3<N>,N>>{
         let center = capsule.closest_point(&self.center);
         self.get_sphere_collision(&Sphere{
             center, radius : capsule.radius
@@ -94,7 +88,7 @@ impl<N: PhysicsScalar> Sphere<N> {
     }
 }
 
-impl<N: PhysicsScalar> Shape3D<N> for Sphere<N> {
+impl<N: FloatingPhysicsScalar> Shape3D<N> for Sphere<N> {
     fn bounding_aabb(&self) -> AxisAlignedBoundingBox<N> {
         AxisAlignedBoundingBox {
             start: self.center() - Vector3::from_element(self.radius),
