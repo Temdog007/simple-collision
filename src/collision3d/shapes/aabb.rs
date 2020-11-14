@@ -103,18 +103,6 @@ impl<N: FloatingPhysicsScalar> From<AxisAlignedBoundingBox<N>> for Matrix4<N> {
     }
 }
 
-impl<N: FloatingPhysicsScalar + FromPrimitive> AxisAlignedBoundingBox<N> {
-    pub fn half_width(&self) -> N {
-        self.width() / N::from_i8(2).unwrap()
-    }
-    pub fn half_height(&self) -> N {
-        self.height() / N::from_i8(2).unwrap()
-    }
-    pub fn half_depth(&self) -> N {
-        self.depth() / N::from_i8(2).unwrap()
-    }
-}
-
 impl<N: FloatingPhysicsScalar> AxisAlignedBoundingBox<N> {
     pub fn width(&self) -> N {
         Float::abs(self.start.x - self.end.x)
@@ -124,6 +112,15 @@ impl<N: FloatingPhysicsScalar> AxisAlignedBoundingBox<N> {
     }
     pub fn depth(&self) -> N {
         Float::abs(self.start.z - self.end.z)
+    }
+    pub fn half_width(&self) -> N {
+        self.width() * N::from_f64(0.5).unwrap()
+    }
+    pub fn half_height(&self) -> N {
+        self.height() * N::from_f64(0.5).unwrap()
+    }
+    pub fn half_depth(&self) -> N {
+        self.depth() * N::from_f64(0.5).unwrap()
     }
     pub fn min_max(&self) -> (Vector3<N>, Vector3<N>) {
         let min_vec = Vector3::new(
